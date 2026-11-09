@@ -6,3 +6,11 @@ __pycache__/
 *.log
 .vscode/
 .idea/
+
+# local only
+_archive_v1_simulated/
+data/clean/
+results/forecast/preds_*.npz
+src/gee/upload/sampled_fields.*
+!src/gee/upload/sampled_fields.zip
+.pytest_cache/

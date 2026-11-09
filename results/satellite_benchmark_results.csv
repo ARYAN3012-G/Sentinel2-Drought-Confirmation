@@ -1,5 +1,0 @@
-Model,Accuracy,Balanced_Acc,Macro_F1,Healthy_F1,Moderate_F1,Severe_F1,ROC_AUC,Train_Time_s
-DOY-Aware Temporal Transformer,0.9167,0.9183,0.848,0.9638,0.6609,0.9194,0.9874,31.2
-Bidirectional LSTM,0.9048,0.8594,0.8319,0.9353,0.644,0.9166,0.9714,19.5
-Random Forest,0.9207,0.9056,0.8658,0.9511,0.7241,0.9222,0.9847,0.6
-XGBoost,0.9203,0.9036,0.8626,0.9549,0.7136,0.9192,0.987,0.7

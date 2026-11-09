@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"><Document>
+<name>Drone photo positions</name>
+<Style id="p"><IconStyle><scale>0.5</scale><color>ff00ffff</color><Icon><href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon></IconStyle><LabelStyle><scale>0</scale></LabelStyle></Style>
+<Folder><name>Cholasamudram 2025-11-15 (10 photos)</name>
+<Placemark><name>DJI_20251115160608_0071_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.568853,13.811276,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115160618_0073_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.568712,13.811276,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115160643_0078_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.568367,13.811276,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115160648_0079_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.568297,13.811273,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115160753_0092_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.568851,13.811376,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115160843_0102_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.568304,13.811426,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115160908_0107_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.568649,13.811426,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115160923_0110_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.568856,13.811426,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115160928_0111_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.568924,13.811422,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115161013_0120_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.568374,13.811476,0</coordinates></Point></Placemark>
+</Folder>
+<Folder><name>Kurnool_Balaji_Villas 2026-01-20 (4 photos)</name>
+<Placemark><name>DJI_20260120103044_0746_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>78.056245,15.783019,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20260120103054_0748_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>78.056226,15.78292,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20260120104611_0931_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>78.056198,15.782887,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20260120104748_0954_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>78.05644,15.783294,0</coordinates></Point></Placemark>
+</Folder>
+<Folder><name>Kurnool_Pullaiah 2026-01-18 (3 photos)</name>
+<Placemark><name>DJI_20260118084946_0322_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>78.085283,15.79408,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20260118085216_0352_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>78.085202,15.794014,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20260118085236_0356_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>78.085216,15.79415,0</coordinates></Point></Placemark>
+</Folder>
+<Folder><name>Kurnool_Pullaiah 2026-01-19 (4 photos)</name>
+<Placemark><name>DJI_20260119081235_0821_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>78.08018,15.798362,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20260119081240_0822_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>78.080181,15.798413,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20260119093011_0911_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>78.091838,15.807301,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20260119093056_0920_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>78.091808,15.807463,0</coordinates></Point></Placemark>
+</Folder>
+<Folder><name>Lepakshi 2025-11-15 (9 photos)</name>
+<Placemark><name>DJI_20251115145245_0238_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.620744,13.799998,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115145330_0247_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.620415,13.800059,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115145335_0248_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.620473,13.80006,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115145410_0255_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.620758,13.80009,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115145455_0264_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.620223,13.800091,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115145535_0272_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.620482,13.80012,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115145955_0324_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.62063,13.800258,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115150110_0339_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.620365,13.800328,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115150120_0341_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.620248,13.80033,0</coordinates></Point></Placemark>
+</Folder>
+<Folder><name>Sira 2025-11-16 (14 photos)</name>
+<Placemark><name>DJI_20251116120434_0429_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>76.909557,13.804163,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251116120829_0476_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>76.909215,13.804241,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251116130221_0557_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>76.974989,13.79754,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251116130346_0574_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>76.974958,13.797233,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251116130416_0580_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>76.974958,13.797576,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251116130446_0586_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>76.974924,13.797854,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251116130521_0593_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>76.974927,13.797455,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251116130616_0604_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>76.974931,13.796822,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251116130716_0616_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>76.974896,13.797463,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251116130856_0636_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>76.974865,13.797104,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251116130936_0644_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>76.974834,13.796949,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251116131131_0667_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>76.974803,13.796955,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251116131221_0677_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>76.974745,13.797194,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251116131335_0690_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>76.974706,13.796807,0</coordinates></Point></Placemark>
+</Folder>
+<Folder><name>Somandepalle 2025-11-15 (14 photos)</name>
+<Placemark><name>DJI_20251115114408_0018_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.624813,13.99853,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115114423_0021_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.624782,13.998645,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115114613_0038_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.624821,13.998693,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115114633_0042_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.624779,13.998547,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115114648_0045_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.624781,13.998711,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115114728_0053_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.624782,13.999142,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115114753_0058_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.62474,13.999291,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115114818_0063_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.624742,13.999011,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115114838_0067_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.624743,13.998789,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115114913_0074_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.624704,13.998576,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115114953_0082_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.624703,13.99901,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115115138_0103_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.624665,13.998556,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115115208_0109_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.624626,13.99872,0</coordinates></Point></Placemark>
+<Placemark><name>DJI_20251115115418_0135_D.jpg</name><styleUrl>#p</styleUrl><Point><coordinates>77.624587,13.998522,0</coordinates></Point></Placemark>
+</Folder>
+</Document></kml>

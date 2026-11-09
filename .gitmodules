@@ -1,0 +1,4 @@
+[submodule "external/weather_time_series"]
+	path = external/weather_time_series
+	url = https://github.com/ARYAN3012-G/weather_time_series.git
+	branch = main

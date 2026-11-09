@@ -1,0 +1,164 @@
+"""
+Step 3: how does weather drought (SPEI) show up in crops (SVI)?
+
+    python src/analysis/lag_analysis.py
+
+A. Lag correlation: SVI(t) vs SPEI-k(t - lag), k in {30, 60, 90} days, lag 0-90 days,
+   crop-season steps only, per site and rainfed / irrigated (pooled over sampled fields).
+B. Confirmation: weather alarm = SPEI-30 falls below -1 (after >= 30 days above, crop season).
+   Confirmed if the site's rainfed farmland reaches SVI < -1 within 60 days.
+   Compared with the base rate for any crop-season date (does an alarm add information?).
+C. Seasonal SVI per site and year (Aug-Nov, rainfed) for comparison with declared droughts.
+Outputs: results/lag/{lag_correlation.csv, best_lag.csv, confirmation.csv, seasonal_vci.csv, LAG_REPORT.md}
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import config as C  # noqa: E402
+
+to_md = C.weather_module("utils/report.py").to_md
+OUT = C.RESULTS_DIR / "lag"
+
+
+def load():
+    f = pd.read_csv(C.CLEAN_DIR / "fields_5day.csv", parse_dates=["date"])
+    w = pd.read_csv(C.CLEAN_DIR / "weather_5day.csv", parse_dates=["date"])
+    z = None
+    if (C.CLEAN_DIR / "zones_5day.csv").exists():
+        z = pd.read_csv(C.CLEAN_DIR / "zones_5day.csv", parse_dates=["date"])
+    return f, w, z
+
+
+def add_lagged_spei(df: pd.DataFrame, w: pd.DataFrame) -> pd.DataFrame:
+    """SPEI-k at date t - lag for every lag (weather is on the same 5-day grid)."""
+    w = w.sort_values(["weather", "date"])
+    cols = {}
+    for lag in C.LAGS_DAYS:
+        sh = w[["weather", "date"]].copy()
+        sh["date"] = sh["date"] + pd.Timedelta(days=lag)          # value of day t-lag shown at t
+        for k in C.SPEI_SCALES:
+            sh[f"SPEI{k}_lag{lag}"] = w[f"SPEI{k}"].to_numpy()
+        cols[lag] = sh
+    out = df
+    for lag in C.LAGS_DAYS:
+        out = out.merge(cols[lag], on=["weather", "date"], how="left")
+    return out
+
+
+def lag_correlation(f: pd.DataFrame, w: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    d = f[f["date"].dt.month.isin(C.CROP_SEASON_MONTHS) & f["SVI"].notna()]
+    d = add_lagged_spei(d[["field_id", "site_code", "irrigated", "weather", "date", "SVI"]], w)
+    rows = []
+    for (site, irr), g in d.groupby(["site_code", "irrigated"]):
+        for k in C.SPEI_SCALES:
+            for lag in C.LAGS_DAYS:
+                x = g[f"SPEI{k}_lag{lag}"]
+                ok = x.notna()
+                r = g.loc[ok, "SVI"].corr(x[ok], method="spearman") if ok.sum() > 30 else np.nan
+                rows.append(dict(site=site, irrigated=irr, spei_scale=k, lag_days=lag, rho=r, n=int(ok.sum())))
+    corr = pd.DataFrame(rows)
+    best = corr.loc[corr.groupby(["site", "irrigated"])["rho"].idxmax()].reset_index(drop=True)
+    return corr, best
+
+
+def site_rainfed_vci(f: pd.DataFrame, z: pd.DataFrame | None) -> pd.DataFrame:
+    """Rainfed SVI per site: whole-area zone if available, else median of sampled rainfed fields."""
+    if z is not None:
+        s = z[z["irrigated"] == 0][["site_code", "date", "SVI"]]
+        s = s.assign(source="whole-area farmland")
+    else:
+        s = (f[f["irrigated"] == 0].groupby(["site_code", "date"])["SVI"].median()
+             .reset_index().assign(source="median of sampled fields"))
+    return s
+
+
+def confirmation(svci: pd.DataFrame, w: pd.DataFrame) -> pd.DataFrame:
+    steps_reset = C.ALARM_RESET_DAYS // C.STEP_DAYS
+    steps_win = C.CONFIRM_WINDOW_DAYS // C.STEP_DAYS
+    rows = []
+    for site, g in svci.groupby("site_code"):
+        wx = w[w["weather"] == C.SITES[site]["weather"]].set_index("date")["SPEI30"]
+        g = g.set_index("date").sort_index()
+        dates = g.index
+        spei30 = wx.reindex(dates).to_numpy()
+        stress = (g["SVI"] < C.STRESS_Z).to_numpy()
+        labelled = g["SVI"].notna().to_numpy()
+        season = np.isin(dates.month, C.CROP_SEASON_MONTHS)
+
+        def followed(i):
+            j = slice(i + 1, i + 1 + steps_win)
+            if not labelled[j].any():
+                return None, None
+            hit = np.where(stress[j] & labelled[j])[0]
+            return (True, (hit[0] + 1) * C.STEP_DAYS) if len(hit) else (False, None)
+
+        alarms, base = [], []
+        for i in range(steps_reset, len(dates) - 1):
+            if not season[i] or not np.isfinite(spei30[i]):
+                continue
+            hit, delay = followed(i)
+            if hit is None:
+                continue
+            base.append(hit)
+            prev = spei30[i - steps_reset:i]
+            if spei30[i] < C.ALARM_SPEI and np.all(np.nan_to_num(prev, nan=0) >= C.ALARM_SPEI):
+                alarms.append((dates[i].date(), hit, delay))
+        n = len(alarms)
+        hits = sum(a[1] for a in alarms)
+        delays = [a[2] for a in alarms if a[1]]
+        rows.append(dict(site=site, alarms=n, confirmed=hits,
+                         confirmation_rate=round(hits / n, 3) if n else np.nan,
+                         base_rate_any_date=round(float(np.mean(base)), 3) if base else np.nan,
+                         median_delay_days=float(np.median(delays)) if delays else np.nan,
+                         alarm_dates=", ".join(str(a[0]) for a in alarms)))
+    return pd.DataFrame(rows)
+
+
+def seasonal(svci: pd.DataFrame) -> pd.DataFrame:
+    s = svci[svci["date"].dt.month.isin([8, 9, 10, 11])].copy()
+    s["year"] = s["date"].dt.year
+    return s.pivot_table(index="site_code", columns="year", values="SVI", aggfunc="mean").round(2)
+
+
+def main():
+    OUT.mkdir(parents=True, exist_ok=True)
+    f, w, z = load()
+    corr, best = lag_correlation(f, w)
+    corr.to_csv(OUT / "lag_correlation.csv", index=False)
+    best.to_csv(OUT / "best_lag.csv", index=False)
+    pooled = (corr.groupby(["irrigated", "spei_scale", "lag_days"])["rho"].median()
+              .unstack("lag_days").round(2))
+    svci = site_rainfed_vci(f, z)
+    conf = confirmation(svci, w)
+    conf.to_csv(OUT / "confirmation.csv", index=False)
+    seas = seasonal(svci)
+    seas.to_csv(OUT / "seasonal_vci.csv")
+
+    lines = ["# Weather drought -> crop stress", "",
+             "## A. Lag correlation (Spearman rho between SVI on day t and SPEI-k on day t-lag)", "",
+             "Crop-season steps (Jul-Nov) with a label. Positive rho = wetter weather, healthier crops.", "",
+             "### Median over sites (rows: irrigated 0/1, SPEI scale; columns: lag in days)", "",
+             to_md(pooled), "",
+             "### Strongest link per site", "", to_md(best.round(3), index=False), "",
+             "## B. Does a weather alarm predict satellite-confirmed stress?", "",
+             f"Alarm: SPEI-30 < {C.ALARM_SPEI} after >= {C.ALARM_RESET_DAYS} days above, in Jul-Nov. "
+             f"Confirmed: rainfed farmland SVI < {C.STRESS_Z:g} within {C.CONFIRM_WINDOW_DAYS} days. "
+             "Base rate = same check for every crop-season date. An alarm is informative only if "
+             "its confirmation rate is clearly above the base rate.", "",
+             f"Source of site SVI: {svci['source'].iloc[0]}.", "",
+             to_md(conf.drop(columns=["alarm_dates"]), index=False), "",
+             "## C. Mean Aug-Nov SVI of rainfed farmland per year (negative = worse than normal)", "",
+             "Compare with official drought declarations for each district and year.", "",
+             to_md(seas), ""]
+    (OUT / "LAG_REPORT.md").write_text("\n".join(lines), encoding="utf-8")
+    print(f"Wrote {OUT / 'LAG_REPORT.md'}")
+
+
+if __name__ == "__main__":
+    main()
