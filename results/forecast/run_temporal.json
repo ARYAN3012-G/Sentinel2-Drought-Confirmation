@@ -1,0 +1,29 @@
+{
+ "split": [
+  "temporal"
+ ],
+ "horizons": [
+  15,
+  30
+ ],
+ "feature_sets": [
+  "satellite",
+  "sat_pastweather",
+  "sat_weatherforecast",
+  "sat_futureweather_UPPERBOUND",
+  "weather_only"
+ ],
+ "models": [
+  "rf",
+  "xgb"
+ ],
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4
+ ],
+ "n_boot": 1000,
+ "quick": false
+}
