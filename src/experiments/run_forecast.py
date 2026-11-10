@@ -64,7 +64,9 @@ def future_block(wx: np.ndarray, t_idx: np.ndarray, H: int) -> np.ndarray:
     return np.column_stack(out)
 
 
-def build_samples(h_days: int):
+def build_samples(h_days: int, live: bool = False):
+    """live=True: also the most recent dates whose target (t+h) is not observed yet (for run_system);
+    y = -1 there and the 'future' block is empty. Inputs are built exactly as in the evaluation."""
     f = pd.read_csv(C.CLEAN_DIR / "fields_5day.csv", parse_dates=["date"])
     w = pd.read_csv(C.CLEAN_DIR / "weather_5day.csv", parse_dates=["date"]).set_index(["weather", "date"])
     fc = load_weather_forecasts()
@@ -73,7 +75,7 @@ def build_samples(h_days: int):
     metas = []
     for fid, g in f.sort_values("date").groupby("field_id", sort=True):
         n = len(g)
-        if n < L + H:
+        if n < L + (0 if live else H):
             continue
         idx = pd.MultiIndex.from_arrays([g["weather"], g["date"]])
         dates = g["date"].to_numpy()
@@ -81,14 +83,19 @@ def build_samples(h_days: int):
         wf = fc.reindex(idx).to_numpy(float)
         sat = g[C.SAT_FEATURES].to_numpy(float)
         lab, lab_c, age = (g[c].to_numpy(float) for c in ("label", "label_c", "age_c"))
-        t_idx = np.arange(L - 1, n - H)                                  # window ends at t
+        t_idx = np.arange(L - 1, n if live else n - H)                    # window ends at t
         ws = sliding_window_view(sat, (L, sat.shape[1]))[:, 0][: len(t_idx)]
         ww = sliding_window_view(wx, (L, wx.shape[1]))[:, 0][: len(t_idx)]
-        fut = future_block(wx, t_idx, H)
         wft = wf[t_idx]
-        tgt = lab[t_idx + H]
-        keep = (np.isfinite(tgt) & (age[t_idx] <= C.MAX_INPUT_AGE) & np.isfinite(ww).all(axis=(1, 2))
-                & np.isfinite(wft).all(1) & np.isfinite(fut).all(1))
+        if live:
+            fut = np.zeros((len(t_idx), 0))
+            tgt = np.array([lab[i + H] if i + H < n else np.nan for i in t_idx])
+            keep = (age[t_idx] <= C.MAX_INPUT_AGE) & np.isfinite(ww).all(axis=(1, 2)) & np.isfinite(wft).all(1)
+        else:
+            fut = future_block(wx, t_idx, H)
+            tgt = lab[t_idx + H]
+            keep = (np.isfinite(tgt) & (age[t_idx] <= C.MAX_INPUT_AGE) & np.isfinite(ww).all(axis=(1, 2))
+                    & np.isfinite(wft).all(1) & np.isfinite(fut).all(1))
         if not keep.any():
             continue
         t_idx = t_idx[keep]
@@ -103,8 +110,9 @@ def build_samples(h_days: int):
         metas.append(pd.DataFrame({
             "field_id": fid, "site_code": g["site_code"].iloc[0], "cluster": g["cluster"].iloc[0],
             "irrigated": g["irrigated"].iloc[0], "input_start": pd.to_datetime(dates[t_idx - L + 1]),
-            "t": t_dates, "target_date": pd.to_datetime(dates[t_idx + H]),
-            "y": tgt[keep].astype(int), "label_t": lab_c[t_idx]}))
+            "t": t_dates, "target_date": t_dates + pd.Timedelta(days=h_days),
+            "y": np.nan_to_num(tgt[keep], nan=-1).astype(int), "label_t": lab_c[t_idx],
+            "svi_t": g["SVI_c"].to_numpy(float)[t_idx]}))
     meta = pd.concat(metas, ignore_index=True)
     meta["period"] = meta["target_date"].dt.year.map(C.period_of_year)
     meta["input_period"] = meta["input_start"].dt.year.map(C.period_of_year)

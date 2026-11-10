@@ -6,7 +6,8 @@ Link step 2: real forecasts from the WEATHER MODULE for every satellite date (20
 Uses the weather module's best configuration by validation (feature set weather_spei_doy,
 XGBoost) and its own code and split: trained on 1979-2011, early stopping on 2012-2018,
 so every forecast for 2019+ is out-of-sample. For each weather site and each day t it gives
-P(Healthy / Moderate / Severe SPEI class) for t+7, t+15 and t+30, made with data up to day t.
+P(Healthy / Moderate / Severe SPEI class) for t+7, t+15 and t+30, made with data up to day t,
+for every day t up to the last day of weather data (also when t+h is not observed yet).
 
 Runs in a separate Python process inside the weather module, because both repos have a
 module called `config`.
@@ -47,13 +48,25 @@ def worker(weather_dir: Path, out: Path, horizons: list[int], feature_set: str, 
         p[:, clf.classes_] = clf.predict_proba(flat(X_new))
         return p, round(time.time() - t0, 1)
 
-    frames = {k: add_doy_features(v) for k, v in load_prepared().items()}
+    def pad(df: pd.DataFrame, n: int) -> pd.DataFrame:
+        """Append n placeholder days (copies of the last day) so the sequence builder also returns
+        forecasts MADE on the most recent days, whose target days are not observed yet. Placeholder
+        days never enter the input window of a kept forecast (filtered below) and are never scored."""
+        last = df.iloc[[-1]]
+        extra = pd.concat([last] * n, ignore_index=True)
+        extra[WC.DATE_COLUMN] = last[WC.DATE_COLUMN].iloc[0] + pd.to_timedelta(np.arange(1, n + 1), "D")
+        return pd.concat([df, extra], ignore_index=True)
+
+    raw = load_prepared()
+    real_end = {k: v[WC.DATE_COLUMN].max() for k, v in raw.items()}
+    frames = {k: add_doy_features(pad(v, max(horizons))) for k, v in raw.items()}
     parts = []
     for h in horizons:
         X, y, meta = build_sequences_all_fields(frames, feature_set, h)
         per = purged_periods(meta)
         t = pd.to_datetime(meta["last_input_date"])
-        use = (t >= pd.Timestamp(start)).to_numpy()
+        made_on_real_data = (t <= meta["field"].map(real_end)).to_numpy()
+        use = (t >= pd.Timestamp(start)).to_numpy() & made_on_real_data
         p, secs = train_xgb(X[per == "train"], y[per == "train"], X[per == "val"], y[per == "val"], X[use])
         info = {"train_time_s": secs}
         m = pd.DataFrame({"weather": meta.loc[use, "field"].to_numpy(), "date": t[use].dt.date.to_numpy(),

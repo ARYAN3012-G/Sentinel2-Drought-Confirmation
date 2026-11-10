@@ -112,6 +112,24 @@ Forecast reports also break the TEST results down by rainfed / irrigated fields 
 2026 drought season (same trained models, no retraining). Version 3 is compared directly with
 version 2 (Δ vs past weather) to test whether the weather module's forecast adds skill.
 
+## Using the system (any date, every month)
+
+```bat
+python src/system/run_system.py --train              :: once: train + save the crop model (models/)
+python src/system/run_system.py --date 2026-09-15    :: any date with data
+python src/system/run_system.py                      :: latest date with data
+```
+
+Writes `results/system/<date>/`: `SYSTEM_REPORT.md` (per site: weather alarm, satellite
+confirmation, status), `fields_to_fly.csv` and `fields_to_fly.kml` (Google Earth: red = damaged now,
+orange = healthy now but at risk within 15 days). The at-risk list is only made for dates from 2025
+on; earlier dates are inside the crop model's training years.
+
+**Each new month (no retraining):** weather module `python tools/update_agera5.py --start <last day> --end <date>`;
+Earth Engine script B with the new end date, export saved to `data/gee_exports/`; then
+`build_dataset.py`, `weather_link.py`, `weather_forecasts.py` and `run_system.py`. Models, SPEI
+calibration and SVI normals stay frozen. Retrain once a year after the season if wanted.
+
 ## Outputs
 
 | Path | Content |
