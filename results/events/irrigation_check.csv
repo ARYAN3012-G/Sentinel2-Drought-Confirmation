@@ -1,0 +1,9 @@
+site,irrigated_fields,doubtful,drought_SVI_rainfed_median,drought_SVI_irrigated_median,rho_rainfed_median,rho_irrigated_median,doubtful_field_ids
+Bal,10,0,-0.88,-0.04,0.48,0.23,
+Cho,10,0,-1.51,-1.31,0.58,0.65,
+Din,10,0,-1.06,-0.53,0.63,0.22,
+Lep,10,2,-1.07,-0.83,0.58,0.47,Lep_-1716647714_53 Lep_105608633_69
+Ped,10,2,-0.66,-0.08,0.29,0.17,Ped_-1627922839_44 Ped_1951979809_83
+Pul,10,3,-0.45,-0.15,0.21,0.14,Pul_-714521376_48 Pul_1665428792_76 Pul_1815014780_35
+Sira,10,1,-1.63,-0.11,0.55,0.22,Sira_1105854812_72
+Som,10,1,-1.39,-0.96,0.52,0.32,Som_1128382370_72
