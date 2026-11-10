@@ -14,6 +14,8 @@ Stage 1 (weather module, trained 1979-2011): SPEI-30/90 on the date and the fore
           for +7/+15/+30 days. ALARM if SPEI-30 < -1 now or the +15-day forecast is Severe.
 Stage 2 (satellite): latest SVI of the 20 sampled rainfed fields per site (images at most
           30 days old). CONFIRMED if the median rainfed SVI < -1 (same rule as the lag analysis).
+Status: DROUGHT (alarm + confirmed) · DROUGHT continuing (confirmed, SPEI-30 recovered but
+          SPEI-90 < -1) · WATCH (alarm, crops not yet stressed) · CROP STRESS without alarm · normal.
 Stage 3 (targeting): fields to fly, two lists per site:
           - damaged now: fields with SVI < -1, worst first (to measure the damage);
           - at risk: healthy fields ranked by the crop model's probability of dropping below
@@ -184,12 +186,16 @@ def run(date: pd.Timestamp | None, n_per_list: int):
     fly[cols].to_csv(od / "fields_to_fly.csv", index=False)
     write_kml(fly, geo, od / "fields_to_fly.kml", f"Fields to fly, {date.date()}")
 
-    summary = wx[["site", "SPEI30", "ALARM"]].merge(sat[["site", "median_SVI", "fields_below_normal", "CONFIRMED"]],
-                                                    on="site")
+    summary = wx[["site", "SPEI30", "SPEI90", "ALARM"]].merge(
+        sat[["site", "median_SVI", "fields_below_normal", "CONFIRMED"]], on="site")
+    # Crops follow SPEI-90 best (lag analysis): after late rain SPEI-30 can recover while the
+    # 90-day deficit and the crop stress persist -> "continuing", not "over".
+    continuing = ~summary.ALARM & summary.CONFIRMED & (summary.SPEI90 < C.ALARM_SPEI)
     summary["status"] = np.select(
-        [summary.ALARM & summary.CONFIRMED, summary.ALARM & ~summary.CONFIRMED, ~summary.ALARM & summary.CONFIRMED],
-        ["DROUGHT: alarm confirmed by crops", "WATCH: weather alarm, crops not yet stressed",
-         "CROP STRESS without weather alarm"], "normal")
+        [summary.ALARM & summary.CONFIRMED, continuing, summary.ALARM & ~summary.CONFIRMED,
+         ~summary.ALARM & summary.CONFIRMED],
+        ["DROUGHT: alarm confirmed by crops", "DROUGHT continuing: crops stressed, 90-day deficit persists",
+         "WATCH: weather alarm, crops not yet stressed", "CROP STRESS without weather alarm"], "normal")
     risk_note = ("" if risk is not None else
                  f"\n\nAt-risk ranking skipped: {date.year} is inside the crop model's training years "
                  f"(2019-{FIRST_UNSEEN_YEAR - 1}), so its predictions would be in-sample.")
@@ -198,7 +204,9 @@ def run(date: pd.Timestamp | None, n_per_list: int):
              "the sampled rainfed fields, images at most 30 days old). Stage 3 = fields for the drone.", "",
              "## Status per site", "", to_md(summary, index=False), "",
              "## Stage 1: weather", "", to_md(wx.drop(columns=[c for c in wx if c.startswith("_")]), index=False), "",
-             f"ALARM = SPEI-30 < {C.ALARM_SPEI} on the date, or the +{H}-day forecast class is Severe.", "",
+             f"ALARM = SPEI-30 < {C.ALARM_SPEI} on the date, or the +{H}-day forecast class is Severe. "
+             f"DROUGHT continuing = no alarm any more (SPEI-30 recovered) but crops still stressed and "
+             f"SPEI-90 < {C.ALARM_SPEI}.", "",
              "## Stage 2: satellite", "", to_md(sat, index=False), "",
              f"CONFIRMED = median rainfed SVI < {C.STRESS_Z:g}.", "",
              "## Stage 3: fields to fly", "",
