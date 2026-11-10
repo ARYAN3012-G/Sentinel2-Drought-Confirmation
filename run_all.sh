@@ -10,6 +10,7 @@ echo "[2/7] Weather link";        python src/dataprep/weather_link.py
 echo "[3/7] Weather forecasts";   python src/dataprep/weather_forecasts.py
 echo "[4/7] Tests";               python -m pytest tests -q
 echo "[5/7] Lag analysis";        python src/analysis/lag_analysis.py
+echo "[5/7] Drought events";      python src/analysis/drought_events.py
 echo "[6/7] Forecast temporal";   python src/experiments/run_forecast.py --split temporal
 echo "[7/7] Forecast LOCO";       python src/experiments/run_forecast.py --split loco
 echo "DONE. See results/qc, results/lag, results/forecast"

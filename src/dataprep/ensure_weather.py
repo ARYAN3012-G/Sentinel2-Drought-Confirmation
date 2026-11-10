@@ -7,8 +7,9 @@ The weather module (github.com/ARYAN3012-G/weather_time_series) is included as a
 submodule in external/weather_time_series. This script
   1. fetches it if the folder is empty (git submodule update --init), unless another copy is
      found (parent folder, sibling folder or WEATHER_MODULE_DIR — see src/config.py);
-  2. runs the weather module's prepare_data.py if its data/prepared/ folder is missing
-     (site audit, duplicate removal, SPEI calibrated on 1979-2011; takes seconds).
+  2. runs the weather module's prepare_data.py if its data/prepared/ folder is missing or older
+     than the raw weather files (site audit, duplicate removal, SPEI calibrated on 1979-2011;
+     takes seconds).
 """
 from __future__ import annotations
 
@@ -46,8 +47,12 @@ def main():
                      f"{SUBMODULE}")
     print(f"Weather module: {wdir}")
     prepared = wdir / "data" / "prepared"
-    if not any(prepared.glob("*.csv")):
-        print("Preparing weather data (weather module's prepare_data.py) ...")
+    raw = list((wdir / "data" / "processed" / "weather").glob("*_with_spei.csv"))
+    prep = list(prepared.glob("*.csv"))
+    stale = bool(prep) and max(p.stat().st_mtime for p in raw) > min(p.stat().st_mtime for p in prep)
+    if not prep or stale:
+        print("Preparing weather data (weather module's prepare_data.py)"
+              + (" - raw weather files are newer than the prepared ones" if stale else "") + " ...")
         subprocess.run([sys.executable, "src/dataprep/prepare_data.py"], cwd=wdir, check=True)
     n = len(list(prepared.glob("*.csv")))
     print(f"Weather data ready: {n} sites in {prepared}")

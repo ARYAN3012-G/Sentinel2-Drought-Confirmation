@@ -194,8 +194,17 @@ def onset_scores(y, label_t, p):
             "onset_pr_auc": round(float(average_precision_score(ev, score)), 3)}
 
 
-def evaluate(meta, mk, results, n_boot):
-    te = meta[mk["test"]]
+# Breakdowns of the same TEST predictions (models are not retrained): rainfed / irrigated fields,
+# and the 2026 kharif drought (targets Jul-Nov 2026; confirmed by AgERA5 rain 31-57 % below normal).
+SUBGROUPS = {
+    "rainfed fields": lambda te: (te["irrigated"] == 0).to_numpy(),
+    "irrigated fields": lambda te: (te["irrigated"] == 1).to_numpy(),
+    "2026 drought season (targets Jul-Nov 2026)": lambda te: te["target_date"].between("2026-07-01", "2026-11-30").to_numpy(),
+}
+
+
+def evaluate(te, results, n_boot):
+    """te: TEST rows of meta; results: {model: [probs per seed]} for exactly those rows."""
     y = te["y"].to_numpy()
     lt = te["label_t"].to_numpy()
     blocks = te["target_date"].dt.strftime("%Y-%m").to_numpy()
@@ -217,6 +226,12 @@ def evaluate(meta, mk, results, n_boot):
             b = M.block_bootstrap(y, pm.argmax(1), blocks, n_boot=n_boot, seed=C.BOOTSTRAP_SEED,
                                   pred_ref=np.mean(results[ref1], axis=0).argmax(1))
             row["vs_sat_low"], row["vs_sat_high"] = b.get("d_macro_f1_ci_low"), b.get("d_macro_f1_ci_high")
+        # does the weather MODULE's forecast add anything beyond past weather?
+        ref2 = f"sat_pastweather/{model}"
+        if fs == "sat_weatherforecast" and ref2 in results:
+            b = M.block_bootstrap(y, pm.argmax(1), blocks, n_boot=n_boot, seed=C.BOOTSTRAP_SEED,
+                                  pred_ref=np.mean(results[ref2], axis=0).argmax(1))
+            row["vs_past_low"], row["vs_past_high"] = b.get("d_macro_f1_ci_low"), b.get("d_macro_f1_ci_high")
         rows.append(row)
     return pd.DataFrame(rows)
 
@@ -234,7 +249,8 @@ def write_report(split, tables, info):
              "ranking of a drop below normal at t+h (ROC-AUC 0.5 = no skill; PR-AUC vs base rate).", "",
              "Versions: 1 `satellite` · 2 `sat_pastweather` · 3 `sat_weatherforecast` (integrated "
              "weather -> satellite system) · 4 `sat_futureweather_UPPERBOUND` (perfect weather "
-             "forecast, not a usable model) · reference `weather_only`.", ""]
+             "forecast, not a usable model) · reference `weather_only`. Δ vs past weather (version 3 "
+             "only): does the weather module's forecast add skill beyond the past weather of version 2?", ""]
     for (fold, h), df in tables.items():
         i = info[(fold, h)]
         lines += [f"## {fold} — horizon {h} days", "",
@@ -249,6 +265,8 @@ def write_report(split, tables, info):
                                                           df.get("d_macro_f1_ci_high", none))],
             "Δ vs satellite only": [ci(a, b) for a, b in zip(df.get("vs_sat_low", none),
                                                              df.get("vs_sat_high", none))],
+            "Δ vs past weather": [ci(a, b) for a, b in zip(df.get("vs_past_low", none),
+                                                           df.get("vs_past_high", none))],
             "severe-F1": df["severe_f1"].round(3),
             "onset ROC-AUC": df["onset_roc_auc"], "onset PR-AUC": df["onset_pr_auc"],
             "onset rate": df["onset_rate"]})
@@ -292,9 +310,22 @@ def main():
                             print(f"{split} {name} h{h} {fs:30s} {model} seed{s}  {time.time() - t0:.0f}s",
                                   flush=True)
                         results[f"{fs}/{model}"] = probs
-                df = evaluate(meta, mk, results, 100 if a.quick else a.n_boot)
+                nb = 100 if a.quick else a.n_boot
+                te = meta[mk["test"]]
+                df = evaluate(te, results, nb)
                 tables[(name, h)] = df
                 summary.append(df.assign(split=split, fold=name, horizon=h))
+                for sub, rule in SUBGROUPS.items():
+                    sel = rule(te)
+                    if sel.sum() < 200 or len(np.unique(te_y[sel])) < 2:
+                        continue
+                    sname = f"{name} · {sub}"
+                    info[(sname, h)] = {"train": info[(name, h)]["train"], "val": info[(name, h)]["val"],
+                                        "test": int(sel.sum()), "test_classes": " / ".join(
+                                            f"{C.CLASS_NAMES[c]} {np.mean(te_y[sel] == c):.0%}" for c in range(K))}
+                    sdf = evaluate(te[sel], {k: [p[sel] for p in v] for k, v in results.items()}, nb)
+                    tables[(sname, h)] = sdf
+                    summary.append(sdf.assign(split=split, fold=sname, horizon=h))
                 np.savez_compressed(OUT / f"preds_{split}_{name}_h{h}.npz", y=te_y,
                                     **{k.replace("/", "__"): np.mean(v, 0) for k, v in results.items()})
         pd.concat(summary).to_csv(OUT / f"summary_{split}.csv", index=False)

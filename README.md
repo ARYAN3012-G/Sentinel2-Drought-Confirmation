@@ -31,6 +31,7 @@ clone was made without `--recursive` and prepares its data (seconds). No PyTorch
 | 3 | `python src/dataprep/weather_forecasts.py` | weather-module forecasts (t+7/15/30) for every satellite date |
 | 4 | `python -m pytest tests -q` | 12 integrity / leakage tests |
 | 5 | `python src/analysis/lag_analysis.py` | weather drought → crop stress: lags, alarm confirmation, seasonal SVI |
+| 5b | `python src/analysis/drought_events.py` | 2023 / 2025 / 2026 seasons side by side, irrigation label check, lag robustness |
 | 6 | `python src/experiments/run_forecast.py` | 15/30-day crop-condition forecasts: 4 versions, baselines, onsets, CIs |
 
 ---
@@ -105,7 +106,11 @@ are recomputed with the weather module's calibrator (log-logistic, 1979-2011, fr
   block-bootstrap 95 % CIs, and **onset** scores (fields healthy at t that drop below normal by
   t+h), which persistence cannot predict by definition.
 
-Note: weather data end in June 2026, so samples needing later weather are not used.
+Weather data run to 2 November 2026 (extended with the weather module's `tools/update_agera5.py`);
+Jun-Oct 2026 rain was 31-57 % below normal, so the TEST period contains a real drought season.
+Forecast reports also break the TEST results down by rainfed / irrigated fields and for the
+2026 drought season (same trained models, no retraining). Version 3 is compared directly with
+version 2 (Δ vs past weather) to test whether the weather module's forecast adds skill.
 
 ## Outputs
 
@@ -113,6 +118,7 @@ Note: weather data end in June 2026, so samples needing later weather are not us
 |---|---|
 | `results/qc/QC_REPORT.md` | observations kept per site, label shares by period / year / site |
 | `results/lag/LAG_REPORT.md` | lag correlations, alarm confirmation, seasonal SVI per year |
+| `results/events/EVENTS_REPORT.md` | drought seasons 2023/2025/2026, irrigation label check, lag robustness |
 | `results/forecast/REPORT_temporal.md`, `REPORT_loco.md` | forecast results with CIs |
 
 ## Structure

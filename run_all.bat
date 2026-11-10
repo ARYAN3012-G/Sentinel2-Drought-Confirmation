@@ -22,6 +22,8 @@ echo [4/7] Integrity / leakage tests
 python -m pytest tests -q || goto :error
 echo [5/7] Lag analysis: weather drought -^> crop stress
 python src\analysis\lag_analysis.py || goto :error
+echo [5/7] Drought events 2023/2025/2026, irrigation label check, lag robustness
+python src\analysis\drought_events.py || goto :error
 echo [6/7] Forecast: temporal split
 python src\experiments\run_forecast.py --split temporal || goto :error
 echo [7/7] Forecast: leave-one-cluster-out
