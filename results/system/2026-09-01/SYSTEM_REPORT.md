@@ -4,16 +4,16 @@ Stage 1 = weather module (SPEI now, forecast SPEI class). Stage 2 = satellite (l
 
 ## Status per site
 
-| site | SPEI30 | ALARM | median_SVI | fields_below_normal | CONFIRMED | status |
-|---|---|---|---|---|---|---|
-| Som | -1.3700 | True | -1.1200 | 60% | True | DROUGHT: alarm confirmed by crops |
-| Lep | -1.1400 | True | 0.0100 | 0% | False | WATCH: weather alarm, crops not yet stressed |
-| Cho | -1.1400 | True | -0.9200 | 50% | False | WATCH: weather alarm, crops not yet stressed |
-| Sira | -1.0900 | True | -1.5900 | 100% | True | DROUGHT: alarm confirmed by crops |
-| Ped | -1.3800 | True | 1.3600 | 33% | False | WATCH: weather alarm, crops not yet stressed |
-| Din | -1.1200 | True | 0.3300 | 0% | False | WATCH: weather alarm, crops not yet stressed |
-| Bal | -1.0600 | True |  |  | False | WATCH: weather alarm, crops not yet stressed |
-| Pul | -1.0700 | True | -0.5700 | 50% | False | WATCH: weather alarm, crops not yet stressed |
+| site | SPEI30 | SPEI90 | ALARM | median_SVI | fields_below_normal | CONFIRMED | status |
+|---|---|---|---|---|---|---|---|
+| Som | -1.3700 | -1.8800 | True | -1.1200 | 60% | True | DROUGHT: alarm confirmed by crops |
+| Lep | -1.1400 | -1.7000 | True | 0.0100 | 0% | False | WATCH: weather alarm, crops not yet stressed |
+| Cho | -1.1400 | -1.7000 | True | -0.9200 | 50% | False | WATCH: weather alarm, crops not yet stressed |
+| Sira | -1.0900 | -1.3900 | True | -1.5900 | 100% | True | DROUGHT: alarm confirmed by crops |
+| Ped | -1.3800 | -1.6600 | True | 1.3600 | 33% | False | WATCH: weather alarm, crops not yet stressed |
+| Din | -1.1200 | -1.3500 | True | 0.3300 | 0% | False | WATCH: weather alarm, crops not yet stressed |
+| Bal | -1.0600 | -1.3300 | True |  |  | False | WATCH: weather alarm, crops not yet stressed |
+| Pul | -1.0700 | -1.2500 | True | -0.5700 | 50% | False | WATCH: weather alarm, crops not yet stressed |
 
 ## Stage 1: weather
 
@@ -28,7 +28,7 @@ Stage 1 = weather module (SPEI now, forecast SPEI class). Stage 2 = satellite (l
 | Bal | 2026-09-01 | -1.0600 | -1.3300 | Moderate (50%) | Moderate (67%) | Moderate (46%) | True |
 | Pul | 2026-09-01 | -1.0700 | -1.2500 | Moderate (57%) | Moderate (80%) | Moderate (59%) | True |
 
-ALARM = SPEI-30 < -1.0 on the date, or the +15-day forecast class is Severe.
+ALARM = SPEI-30 < -1.0 on the date, or the +15-day forecast class is Severe. DROUGHT continuing = no alarm any more (SPEI-30 recovered) but crops still stressed and SPEI-90 < -1.0.
 
 ## Stage 2: satellite
 

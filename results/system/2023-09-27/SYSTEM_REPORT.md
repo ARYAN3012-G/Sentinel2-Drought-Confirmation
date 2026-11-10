@@ -4,16 +4,16 @@ Stage 1 = weather module (SPEI now, forecast SPEI class). Stage 2 = satellite (l
 
 ## Status per site
 
-| site | SPEI30 | ALARM | median_SVI | fields_below_normal | CONFIRMED | status |
-|---|---|---|---|---|---|---|
-| Som | -1.0600 | True | -2.1500 | 100% | True | DROUGHT: alarm confirmed by crops |
-| Lep | -1.0200 | True | -2.5500 | 100% | True | DROUGHT: alarm confirmed by crops |
-| Cho | -1.0200 | True | -1.8600 | 100% | True | DROUGHT: alarm confirmed by crops |
-| Sira | -0.7600 | False | -0.7000 | 38% | False | normal |
-| Ped | -0.0200 | False | -0.3200 | 41% | False | normal |
-| Din | 0.2700 | False | -0.7000 | 41% | False | normal |
-| Bal | 0.6000 | False | -0.6700 | 38% | False | normal |
-| Pul | 0.3300 | False | -0.5200 | 33% | False | normal |
+| site | SPEI30 | SPEI90 | ALARM | median_SVI | fields_below_normal | CONFIRMED | status |
+|---|---|---|---|---|---|---|---|
+| Som | -1.0600 | -0.0700 | True | -2.1500 | 100% | True | DROUGHT: alarm confirmed by crops |
+| Lep | -1.0200 | 0.0800 | True | -2.5500 | 100% | True | DROUGHT: alarm confirmed by crops |
+| Cho | -1.0200 | 0.0800 | True | -1.8600 | 100% | True | DROUGHT: alarm confirmed by crops |
+| Sira | -0.7600 | 0.3100 | False | -0.7000 | 38% | False | normal |
+| Ped | -0.0200 | 1.2500 | False | -0.3200 | 41% | False | normal |
+| Din | 0.2700 | 1.2600 | False | -0.7000 | 41% | False | normal |
+| Bal | 0.6000 | 1.1700 | False | -0.6700 | 38% | False | normal |
+| Pul | 0.3300 | 0.9400 | False | -0.5200 | 33% | False | normal |
 
 ## Stage 1: weather
 
@@ -28,7 +28,7 @@ Stage 1 = weather module (SPEI now, forecast SPEI class). Stage 2 = satellite (l
 | Bal | 2023-09-27 | 0.6000 | 1.1700 | Healthy (84%) | Healthy (67%) | Moderate (48%) | False |
 | Pul | 2023-09-27 | 0.3300 | 0.9400 | Healthy (61%) | Healthy (60%) | Moderate (51%) | False |
 
-ALARM = SPEI-30 < -1.0 on the date, or the +15-day forecast class is Severe.
+ALARM = SPEI-30 < -1.0 on the date, or the +15-day forecast class is Severe. DROUGHT continuing = no alarm any more (SPEI-30 recovered) but crops still stressed and SPEI-90 < -1.0.
 
 ## Stage 2: satellite
 
