@@ -2,34 +2,34 @@
 
 ## A. Drought seasons (2023, 2026 dry; 2025 normal)
 
-Rain = Jun-Oct total vs 1979-2011 normal (AgERA5). SVI < 0 = greener-than-normal is lost. Field shares: rainfed sampled fields with mean Sep-Oct SVI < -1 (below normal) or < -1.5 (severe). Compare with the official drought mandal lists for each year.
+Rain = Jun-Oct total vs 1979-2011 normal (AgERA5). SVI < 0 = greener-than-normal is lost. Field shares: rainfed sampled fields with mean Sep-Oct SVI < -1 (below normal) or < -1.5 (severe). official_declaration = Andhra Pradesh G.O. drought mandal lists (data/official/; Karnataka not checked).
 
-| site | year | rain_jun_oct_mm | rain_vs_normal_% | SPEI30_aug_oct | SPEI90_aug_oct | SVI_rainfed_aug_nov | SVI_irrigated_aug_nov | rainfed_fields_below_normal_% | rainfed_fields_severe_% | rainfed_fields_n |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Bal | 2023 | 570 | -6 | 0.0600 | 0.4300 | -0.8000 | -0.0300 | 45 | 25 | 20 |
-| Bal | 2025 | 817 | 35 | 0.9900 | 1.2200 | 0.7500 | 0.6500 | 5 | 0 | 20 |
-| Bal | 2026 | 344 | -43 | -1.0600 | -1.3300 | -0.9000 | -0.1600 | 55 | 15 | 20 |
-| Cho | 2023 | 350 | -31 | -1.0400 | -0.3600 | -1.4400 | -1.1200 | 50 | 35 | 20 |
-| Cho | 2025 | 568 | 12 | 0.5000 | 1.2800 | 0.8800 | 0.4900 | 5 | 5 | 20 |
-| Cho | 2026 | 300 | -41 | -1.3800 | -1.6900 | -1.7100 | -1.2500 | 70 | 50 | 20 |
-| Din | 2023 | 492 | -9 | -0.0900 | 0.5500 | -0.9100 | -0.6500 | 40 | 5 | 20 |
-| Din | 2025 | 758 | 39 | 1.1000 | 1.4600 | 0.7600 | 0.2400 | 5 | 0 | 20 |
-| Din | 2026 | 273 | -50 | -1.2700 | -1.4500 | -1.1900 | -0.6900 | 45 | 25 | 20 |
-| Lep | 2023 | 350 | -31 | -1.0400 | -0.3600 | -0.6900 | -0.4700 | 20 | 5 | 20 |
-| Lep | 2025 | 568 | 12 | 0.5000 | 1.2800 | 0.3300 | 0.0000 | 5 | 5 | 20 |
-| Lep | 2026 | 300 | -41 | -1.3800 | -1.6900 | -1.4900 | -1.9400 | 45 | 35 | 20 |
-| Ped | 2023 | 495 | -10 | -0.1400 | 0.5700 | -0.8000 | -0.2200 | 25 | 10 | 20 |
-| Ped | 2025 | 756 | 37 | 1.1300 | 1.7100 | 0.1800 | -0.5500 | 0 | 0 | 20 |
-| Ped | 2026 | 239 | -57 | -1.6300 | -1.7300 | -0.2200 | -0.3000 | 20 | 10 | 20 |
-| Pul | 2023 | 554 | -11 | -0.0600 | 0.2700 | -0.3700 | -0.2400 | 20 | 10 | 20 |
-| Pul | 2025 | 724 | 17 | 0.7600 | 0.9800 | 0.4500 | 0.2400 | 5 | 5 | 20 |
-| Pul | 2026 | 351 | -43 | -1.1800 | -1.3400 | -0.6300 | -0.6600 | 25 | 15 | 20 |
-| Sira | 2023 | 431 | -23 | -0.8900 | -0.1000 | -1.5300 | -0.0800 | 80 | 60 | 20 |
-| Sira | 2025 | 649 | 15 | 0.5000 | 1.3100 | 0.1900 | 0.2300 | 5 | 0 | 20 |
-| Sira | 2026 | 390 | -31 | -1.2600 | -1.5200 | -1.2700 | -0.6900 | 55 | 45 | 20 |
-| Som | 2023 | 283 | -36 | -1.0200 | -0.4100 | -0.7200 | -0.5600 | 45 | 25 | 20 |
-| Som | 2025 | 486 | 11 | 0.4700 | 1.1700 | 0.9700 | 0.7700 | 5 | 0 | 20 |
-| Som | 2026 | 209 | -52 | -1.5500 | -1.8000 | -2.2000 | -1.2300 | 85 | 75 | 20 |
+| site | year | rain_jun_oct_mm | rain_vs_normal_% | SPEI30_aug_oct | SPEI90_aug_oct | SVI_rainfed_aug_nov | SVI_irrigated_aug_nov | rainfed_fields_below_normal_% | rainfed_fields_severe_% | rainfed_fields_n | mandal | official_declaration |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Bal | 2023 | 570 | -6 | 0.0600 | 0.4300 | -0.8000 | -0.0300 | 45 | 25 | 20 | Kurnool Urban (likely) | Severe |
+| Bal | 2025 | 817 | 35 | 0.9900 | 1.2200 | 0.7500 | 0.6500 | 5 | 0 | 20 |  | not checked (rain above normal) |
+| Bal | 2026 | 344 | -43 | -1.0600 | -1.3300 | -0.9000 | -0.1600 | 55 | 15 | 20 | Kurnool Urban (likely) | Severe |
+| Cho | 2023 | 350 | -31 | -1.0400 | -0.3600 | -1.4400 | -1.1200 | 50 | 35 | 20 | Lepakshi | Moderate |
+| Cho | 2025 | 568 | 12 | 0.5000 | 1.2800 | 0.8800 | 0.4900 | 5 | 5 | 20 |  | not checked (rain above normal) |
+| Cho | 2026 | 300 | -41 | -1.3800 | -1.6900 | -1.7100 | -1.2500 | 70 | 50 | 20 | Lepakshi | Severe |
+| Din | 2023 | 492 | -9 | -0.0900 | 0.5500 | -0.9100 | -0.6500 | 40 | 5 | 20 | Kurnool Rural | Not declared |
+| Din | 2025 | 758 | 39 | 1.1000 | 1.4600 | 0.7600 | 0.2400 | 5 | 0 | 20 |  | not checked (rain above normal) |
+| Din | 2026 | 273 | -50 | -1.2700 | -1.4500 | -1.1900 | -0.6900 | 45 | 25 | 20 | Kurnool Rural | Severe |
+| Lep | 2023 | 350 | -31 | -1.0400 | -0.3600 | -0.6900 | -0.4700 | 20 | 5 | 20 | Lepakshi | Moderate |
+| Lep | 2025 | 568 | 12 | 0.5000 | 1.2800 | 0.3300 | 0.0000 | 5 | 5 | 20 |  | not checked (rain above normal) |
+| Lep | 2026 | 300 | -41 | -1.3800 | -1.6900 | -1.4900 | -1.9400 | 45 | 35 | 20 | Lepakshi | Severe |
+| Ped | 2023 | 495 | -10 | -0.1400 | 0.5700 | -0.8000 | -0.2200 | 25 | 10 | 20 | Adoni / Peddakadubur border | Moderate (Adoni) / Severe (Peddakadubur) |
+| Ped | 2025 | 756 | 37 | 1.1300 | 1.7100 | 0.1800 | -0.5500 | 0 | 0 | 20 |  | not checked (rain above normal) |
+| Ped | 2026 | 239 | -57 | -1.6300 | -1.7300 | -0.2200 | -0.3000 | 20 | 10 | 20 | Adoni / Peddakadubur border | Severe (Adoni) / Not declared (Peddakadubur) |
+| Pul | 2023 | 554 | -11 | -0.0600 | 0.2700 | -0.3700 | -0.2400 | 20 | 10 | 20 | Kurnool Urban (likely) | Severe |
+| Pul | 2025 | 724 | 17 | 0.7600 | 0.9800 | 0.4500 | 0.2400 | 5 | 5 | 20 |  | not checked (rain above normal) |
+| Pul | 2026 | 351 | -43 | -1.1800 | -1.3400 | -0.6300 | -0.6600 | 25 | 15 | 20 | Kurnool Urban (likely) | Severe |
+| Sira | 2023 | 431 | -23 | -0.8900 | -0.1000 | -1.5300 | -0.0800 | 80 | 60 | 20 | Sira taluk | Unknown |
+| Sira | 2025 | 649 | 15 | 0.5000 | 1.3100 | 0.1900 | 0.2300 | 5 | 0 | 20 |  | not checked (rain above normal) |
+| Sira | 2026 | 390 | -31 | -1.2600 | -1.5200 | -1.2700 | -0.6900 | 55 | 45 | 20 | Sira taluk | Unknown |
+| Som | 2023 | 283 | -36 | -1.0200 | -0.4100 | -0.7200 | -0.5600 | 45 | 25 | 20 | Somandepalli | Moderate |
+| Som | 2025 | 486 | 11 | 0.4700 | 1.1700 | 0.9700 | 0.7700 | 5 | 0 | 20 |  | not checked (rain above normal) |
+| Som | 2026 | 209 | -52 | -1.5500 | -1.8000 | -2.2000 | -1.2300 | 85 | 75 | 20 | Somandepalli | Severe |
 
 ## B. Irrigation label check
 

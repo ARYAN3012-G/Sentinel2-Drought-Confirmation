@@ -40,7 +40,33 @@ Crop-season steps (Jul-Nov) with a label. Positive rho = wetter weather, healthi
 
 Alarm: SPEI-30 < -1.0 after >= 30 days above, in Jul-Nov. Confirmed: rainfed farmland SVI < -1 within 60 days. Base rate = same check for every crop-season date. An alarm is informative only if its confirmation rate is clearly above the base rate.
 
-Source of site SVI: whole-area farmland.
+Two sources of site SVI (same label rules): median of the sampled rainfed fields, and the whole-area rainfed farmland. Share of Jul-Oct 2026 dates with an SVI value:
+
+| site_code | median of sampled fields | whole-area farmland |
+|---|---|---|
+| Bal | 46% | 38% |
+| Cho | 62% | 4% |
+| Din | 46% | 38% |
+| Lep | 62% | 0% |
+| Ped | 54% | 33% |
+| Pul | 62% | 33% |
+| Sira | 71% | 33% |
+| Som | 96% | 8% |
+
+### Source: median of sampled fields
+
+| site | alarms | confirmed | confirmation_rate | base_rate_any_date | median_delay_days |
+|---|---|---|---|---|---|
+| Bal | 7 | 5 | 0.7140 | 0.2080 | 5.0000 |
+| Cho | 6 | 3 | 0.5000 | 0.3260 | 35.0000 |
+| Din | 4 | 3 | 0.7500 | 0.2280 | 20.0000 |
+| Lep | 6 | 3 | 0.5000 | 0.3360 | 55.0000 |
+| Ped | 3 | 2 | 0.6670 | 0.1800 | 12.5000 |
+| Pul | 5 | 2 | 0.4000 | 0.3230 | 7.5000 |
+| Sira | 6 | 2 | 0.3330 | 0.2850 | 17.5000 |
+| Som | 5 | 2 | 0.4000 | 0.4090 | 15.0000 |
+
+### Source: whole-area farmland
 
 | site | alarms | confirmed | confirmation_rate | base_rate_any_date | median_delay_days |
 |---|---|---|---|---|---|
@@ -55,7 +81,22 @@ Source of site SVI: whole-area farmland.
 
 ## C. Mean Aug-Nov SVI of rainfed farmland per year (negative = worse than normal)
 
-Compare with official drought declarations for each district and year.
+Compare with official drought declarations (data/official/drought_declarations.csv).
+
+### Source: median of sampled fields
+
+| site_code | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|---|---|---|---|---|---|---|---|---|
+| Bal | 0.3000 | 0.4600 | -0.4100 | 0.6700 | -0.8700 | 0.2700 | 0.4600 | -0.9900 |
+| Cho | -0.0300 | 0.7000 | 0.2300 | 0.3500 | -1.4800 | 0.8000 | 0.7400 | -1.5500 |
+| Din | 0.4600 | 0.9100 | -1.2100 | 0.4500 | -0.9300 | 0.2400 | 0.6800 | -1.1700 |
+| Lep | 0.1700 | 0.8900 | 0.5100 | -0.0300 | -0.8000 | 0.8900 | 0.7300 | -1.8800 |
+| Ped | 0.5700 | 0.4900 | -0.4000 | 0.6500 | -0.8500 | 0.5800 | 0.1700 | -0.1900 |
+| Pul | 0.1400 | -0.3600 | -0.2500 | 0.1900 | -0.4600 | -0.4700 | 0.5000 | -0.5700 |
+| Sira | 0.2000 | 0.9500 | 0.5700 | -0.1100 | -1.3000 | 0.4700 | 0.1600 | -1.3500 |
+| Som | -1.1100 | -0.0100 | 0.4500 | 0.8600 | -1.0200 | 0.7700 | 1.0800 | -2.1500 |
+
+### Source: whole-area farmland
 
 | site_code | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
 |---|---|---|---|---|---|---|---|---|
