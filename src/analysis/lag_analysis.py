@@ -67,15 +67,16 @@ def lag_correlation(f: pd.DataFrame, w: pd.DataFrame) -> tuple[pd.DataFrame, pd.
     return corr, best
 
 
-def site_rainfed_vci(f: pd.DataFrame, z: pd.DataFrame | None) -> pd.DataFrame:
-    """Rainfed SVI per site: whole-area zone if available, else median of sampled rainfed fields."""
+def site_rainfed_vci(f: pd.DataFrame, z: pd.DataFrame | None) -> dict[str, pd.DataFrame]:
+    """Rainfed SVI per site from two sources, reported side by side:
+    - median of the 20 sampled rainfed fields (each field is small, so it is often cloud-free);
+    - whole-area rainfed farmland (zone). A whole 3 km area is rarely cloud-free in the monsoon,
+      so in some sites the zone has too few reference points for SVI in Jul-Oct (no label)."""
+    out = {"median of sampled fields": f[f["irrigated"] == 0].groupby(["site_code", "date"])["SVI"]
+           .median().reset_index()}
     if z is not None:
-        s = z[z["irrigated"] == 0][["site_code", "date", "SVI"]]
-        s = s.assign(source="whole-area farmland")
-    else:
-        s = (f[f["irrigated"] == 0].groupby(["site_code", "date"])["SVI"].median()
-             .reset_index().assign(source="median of sampled fields"))
-    return s
+        out["whole-area farmland"] = z[z["irrigated"] == 0][["site_code", "date", "SVI"]]
+    return out
 
 
 def confirmation(svci: pd.DataFrame, w: pd.DataFrame) -> pd.DataFrame:
@@ -134,11 +135,13 @@ def main():
     best.to_csv(OUT / "best_lag.csv", index=False)
     pooled = (corr.groupby(["irrigated", "spei_scale", "lag_days"])["rho"].median()
               .unstack("lag_days").round(2))
-    svci = site_rainfed_vci(f, z)
-    conf = confirmation(svci, w)
-    conf.to_csv(OUT / "confirmation.csv", index=False)
-    seas = seasonal(svci)
-    seas.to_csv(OUT / "seasonal_vci.csv")
+    sources = site_rainfed_vci(f, z)
+    conf = {k: confirmation(v, w) for k, v in sources.items()}
+    pd.concat([c.assign(source=k) for k, c in conf.items()]).to_csv(OUT / "confirmation.csv", index=False)
+    seas = {k: seasonal(v) for k, v in sources.items()}
+    pd.concat([s.assign(source=k) for k, s in seas.items()]).to_csv(OUT / "seasonal_vci.csv")
+    labelled = {k: v[v["date"].dt.month.isin([7, 8, 9, 10]) & v["date"].dt.year.eq(2026)]
+                .groupby("site_code")["SVI"].apply(lambda x: f"{x.notna().mean():.0%}") for k, v in sources.items()}
 
     lines = ["# Weather drought -> crop stress", "",
              "## A. Lag correlation (Spearman rho between SVI on day t and SPEI-k on day t-lag)", "",
@@ -151,11 +154,15 @@ def main():
              f"Confirmed: rainfed farmland SVI < {C.STRESS_Z:g} within {C.CONFIRM_WINDOW_DAYS} days. "
              "Base rate = same check for every crop-season date. An alarm is informative only if "
              "its confirmation rate is clearly above the base rate.", "",
-             f"Source of site SVI: {svci['source'].iloc[0]}.", "",
-             to_md(conf.drop(columns=["alarm_dates"]), index=False), "",
-             "## C. Mean Aug-Nov SVI of rainfed farmland per year (negative = worse than normal)", "",
-             "Compare with official drought declarations for each district and year.", "",
-             to_md(seas), ""]
+             "Two sources of site SVI (same label rules): median of the sampled rainfed fields, "
+             "and the whole-area rainfed farmland. Share of Jul-Oct 2026 dates with an SVI value:", "",
+             to_md(pd.DataFrame(labelled)), ""]
+    for k, c in conf.items():
+        lines += [f"### Source: {k}", "", to_md(c.drop(columns=["alarm_dates"]), index=False), ""]
+    lines += ["## C. Mean Aug-Nov SVI of rainfed farmland per year (negative = worse than normal)", "",
+              "Compare with official drought declarations (data/official/drought_declarations.csv).", ""]
+    for k, sd in seas.items():
+        lines += [f"### Source: {k}", "", to_md(sd), ""]
     (OUT / "LAG_REPORT.md").write_text("\n".join(lines), encoding="utf-8")
     print(f"Wrote {OUT / 'LAG_REPORT.md'}")
 

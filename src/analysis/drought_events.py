@@ -123,6 +123,13 @@ def main():
     f = pd.read_csv(C.CLEAN_DIR / "fields_5day.csv", parse_dates=["date"])
     w = pd.read_csv(C.CLEAN_DIR / "weather_5day.csv", parse_dates=["date"])
     ds, ic, lr = drought_seasons(f, w), irrigation_check(f, w), lag_robustness(f, w)
+    gov = C.ROOT / "data" / "official" / "drought_declarations.csv"   # AP G.O.s, see that folder
+    if gov.exists():
+        g = pd.read_csv(gov)[["site_code", "year", "mandal", "status"]].rename(
+            columns={"site_code": "site", "status": "official_declaration"})
+        ds = ds.merge(g, on=["site", "year"], how="left")
+        ds["official_declaration"] = ds["official_declaration"].fillna(
+            ds["year"].map({2025: "not checked (rain above normal)"}))
     ds.to_csv(OUT / "drought_seasons.csv", index=False)
     ic.to_csv(OUT / "irrigation_check.csv", index=False)
     lr.to_csv(OUT / "lag_by_left_out_year.csv", index=False)
@@ -130,7 +137,8 @@ def main():
              "## A. Drought seasons (2023, 2026 dry; 2025 normal)", "",
              "Rain = Jun-Oct total vs 1979-2011 normal (AgERA5). SVI < 0 = greener-than-normal is lost. "
              "Field shares: rainfed sampled fields with mean Sep-Oct SVI < -1 (below normal) or < -1.5 "
-             "(severe). Compare with the official drought mandal lists for each year.", "",
+             "(severe). official_declaration = Andhra Pradesh G.O. drought mandal lists "
+             "(data/official/; Karnataka not checked).", "",
              to_md(ds, index=False), "",
              "## B. Irrigation label check", "",
              "Drought SVI = mean SVI in Aug-Nov of 2023 and 2026. A real irrigated field should stay "

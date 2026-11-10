@@ -1,0 +1,17 @@
+site_code,mandal,district,year,status,source,note
+Som,Somandepalli,Sri Sathya Sai,2023,Moderate,"G.O.Ms.No.4 Revenue (DM.II) 31-10-2023, Annexure-II serial 78",
+Som,Somandepalli,Sri Sathya Sai,2026,Severe,"G.O.Ms.No.4 Revenue (DM) 01-10-2026, serial 297",severe mandals listed first (28 severe + 1 moderate = Roddam)
+Lep,Lepakshi,Sri Sathya Sai,2023,Moderate,"G.O.Ms.No.4 (2023), serial 80",
+Lep,Lepakshi,Sri Sathya Sai,2026,Severe,"G.O.Ms.No.4 (2026), serial 299",
+Cho,Lepakshi,Sri Sathya Sai,2023,Moderate,"G.O.Ms.No.4 (2023), serial 80",Cholasamudram village lies in Lepakshi mandal
+Cho,Lepakshi,Sri Sathya Sai,2026,Severe,"G.O.Ms.No.4 (2026), serial 299",
+Ped,Adoni / Peddakadubur border,Kurnool,2023,Moderate (Adoni) / Severe (Peddakadubur),G.O.Ms.No.4 (2023): Adoni serial 25 Moderate; PeddaKadubur serial 22 Severe,"field-visit site (named Peddakadubur by the team); pin 15.7826N 77.2528E is ~8 km W of Peddakadubur town, on the Adoni-Peddakadubur border (OSM: Adoni). Compared with both mandals."
+Ped,Adoni / Peddakadubur border,Kurnool,2026,Severe (Adoni) / Not declared (Peddakadubur),G.O.Ms.No.4 (2026): Adoni 1 serial 216 Severe; G.O.Ms.No.5 (2026): Adoni-2 Severe; Peddakadubur absent from both,"field-visit site (named Peddakadubur by the team); pin 15.7826N 77.2528E is ~8 km W of Peddakadubur town, on the Adoni-Peddakadubur border (OSM: Adoni). Compared with both mandals."
+Din,Kurnool Rural,Kurnool,2023,Not declared,absent from G.O.Ms.No.4 (2023),Dinnedevarapadu village is in Kurnool Rural mandal (villageinfo.in)
+Din,Kurnool Rural,Kurnool,2026,Severe,"G.O.Ms.No.4 (2026), serial 203",
+Bal,Kurnool Urban (likely),Kurnool,2023,Severe,"G.O.Ms.No.4 (2023), serial 16",OpenStreetMap: Kurnool city / old Kurnool mandal; Kallur (also Severe) is the alternative
+Bal,Kurnool Urban (likely),Kurnool,2026,Severe,"G.O.Ms.No.4 (2026), serial 209",
+Pul,Kurnool Urban (likely),Kurnool,2023,Severe,"G.O.Ms.No.4 (2023), serial 16",OpenStreetMap: Kurnool city / old Kurnool mandal
+Pul,Kurnool Urban (likely),Kurnool,2026,Severe,"G.O.Ms.No.4 (2026), serial 209",
+Sira,Sira taluk,Tumakuru (Karnataka),2023,Unknown,Karnataka list not checked,
+Sira,Sira taluk,Tumakuru (Karnataka),2026,Unknown,Karnataka list not checked,226 of 240 Karnataka taluks declared
