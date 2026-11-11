@@ -17,7 +17,7 @@
 // =============================================================================
 
 // >>> set YOUR Earth Engine project ID here (top right of the Code Editor) <<<
-var ASSET_ROOT = 'projects/serverchat-489517/assets';
+var ASSET_ROOT = 'projects/drought-sat-2026/assets';
 var START = '2019-01-01', END = '2026-11-01';
 var CLOUD_CS = 0.60;
 // Whole-area farmland series (exports 2-3) are a secondary check and the most expensive part
