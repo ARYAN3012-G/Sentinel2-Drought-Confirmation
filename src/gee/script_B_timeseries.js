@@ -16,6 +16,7 @@
 // Same-day duplicates (one field on two overlapping image tiles) are merged in Python.
 // =============================================================================
 
+// >>> set YOUR Earth Engine project ID here (top right of the Code Editor) <<<
 var ASSET_ROOT = 'projects/serverchat-489517/assets';
 var START = '2019-01-01', END = '2026-11-01';
 var CLOUD_CS = 0.60;
@@ -34,7 +35,8 @@ var AOI = ee.FeatureCollection(SITE_LONLAT.map(function (c) {
 
 // The 240 sampled fields, uploaded as a shapefile (src/gee/upload/sampled_fields.zip)
 var FIELDS = ee.FeatureCollection(ASSET_ROOT + '/sampled_fields_v2');
-var MASK = ee.Image(ASSET_ROOT + '/cropland_mask_v2');
+// cropland_mask_v2 (script A) is only needed for the zone exports (RUN_ZONES = true)
+var MASK = RUN_ZONES ? ee.Image(ASSET_ROOT + '/cropland_mask_v2') : ee.Image.constant([0, 0]).rename(['site', 'irrigated']);
 var ZONE = MASK.select('site').multiply(2).add(MASK.select('irrigated')).rename('zone');
 
 // ---- Sentinel-2 with Cloud Score+ and SCL cloud/shadow masking ----------------
