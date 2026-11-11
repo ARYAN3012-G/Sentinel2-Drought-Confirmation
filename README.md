@@ -6,6 +6,12 @@ The weather module forecasts *meteorological* drought (SPEI). This module measur
 crops actually became stressed (*agricultural* drought), how long after the weather signal,
 and whether weather information improves crop-stress forecasts.
 
+> **v2 rework in progress (Nov 2026):** farmland, field boundaries and irrigation flags are being
+> re-derived from 2019-2023 imagery only (Earth Engine scripts A/B v2, assets `cropland_mask_v2`,
+> `sampled_fields_v2`), with the Somandepalle centre moved to the UAV survey field and Sentinel-2
+> series for the 10 UAV survey points. Site names, mandals and centres: `data/sites.csv`;
+> UAV points: `data/uav_points.csv`; official drought declarations 2023-2026: `data/official/`.
+
 > **v1 is withdrawn.** v1 used simulated Sentinel-2 values and rule-based labels for 40
 > hand-picked random fields; its results are not valid and are not in this repository.
 
@@ -96,9 +102,8 @@ VCI is still computed and used as an input.
 
 ## 4. Link to the weather module
 
-Each site uses the AgERA5 0.1° cell its centre lies in (Lepakshi and Cholasamudram share one;
-Pullaiah uses Balaji Villas' cell; the Peddakadubur field site's cell is downloaded separately by
-`tools/download_weather_cell.py` into `data/weather_extra/`, forecast-only). SPEI-30/60/90
+Each site uses the AgERA5 0.1° cell its centre lies in (weather module v4; Lepakshi and
+Cholasamudram share one cell, Pullaiah and Balaji Villas another). SPEI-30/60/90
 are recomputed with the weather module's calibrator (log-logistic, 1979-2011, frozen).
 - **Lag analysis**: correlation of VCI(t) with SPEI-k(t − lag), lag 0-90 days.
 - **Alarm confirmation**: after SPEI-30 falls below −1, how often does rainfed farmland reach

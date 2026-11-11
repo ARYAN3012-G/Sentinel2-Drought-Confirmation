@@ -17,8 +17,11 @@ RESULTS_DIR = ROOT / "results"
 FIELD_TS_FILE = GEE_DIR / "B_field_timeseries.csv"
 ZONE_TS_FILE = GEE_DIR / "B_zone_timeseries.csv"
 ZONE_PIXELS_FILE = GEE_DIR / "B_zone_pixels.csv"
-SEGMENTS_FILE = GEE_DIR / "field_segments.geojson"
-SITE_STATS_FILE = GEE_DIR / "site_cropland_stats.csv"
+SEGMENTS_FILE = GEE_DIR / "field_segments_v2.geojson"          # script A v2 (2019-2023 only)
+SITE_STATS_FILE = GEE_DIR / "site_cropland_stats_v2.csv"
+UAV_TS_FILE = GEE_DIR / "B_uav_points_timeseries.csv"            # 25 m circles at the UAV survey points
+SITES_TABLE = ROOT / "data" / "sites.csv"                         # master table: names, mandals, centres
+UAV_POINTS_TABLE = ROOT / "data" / "uav_points.csv"
 
 
 # ---------------------------------------------------------------------------
@@ -57,11 +60,9 @@ def weather_module(relpath: str):
 
 # ---------------------------------------------------------------------------
 # Sites. Order = site index used in the Earth Engine cropland mask (zone = idx*2 + irrigated).
-# weather = AgERA5 0.1-degree cell used for the site = the cell that CONTAINS the site centre.
-#   Lepakshi and Cholasamudram share one cell. Pullaiah's centre lies in Balaji Villas' cell (the
-#   weather module's "kurnool_pulliah" point is 22 km south). Peddakadubur's field-visit centre
-#   lies in cell 15.8N 77.3E, ~10 km north of the weather module's "Peddakadubur" point, so that
-#   cell is downloaded separately (tools/download_weather_cell.py -> data/weather_extra/).
+# weather = the weather-module file of the AgERA5 0.1-degree cell that CONTAINS the site centre
+#   (weather module v4 re-downloaded Peddakadubur and kurnool_pulliah for their correct cells).
+#   Lepakshi shares Cholasamudram's cell; Pullaiah lies in Balaji Villas' cell.
 # cluster = spatial group for leave-one-cluster-out (Kurnool sites are 1.6-4.7 km apart).
 # ---------------------------------------------------------------------------
 SITES = {
@@ -69,7 +70,7 @@ SITES = {
     "Lep":  {"name": "Lepakshi",                "weather": "cholasamudram",          "cluster": "south"},
     "Cho":  {"name": "Cholasamudram",           "weather": "cholasamudram",          "cluster": "south"},
     "Sira": {"name": "Sira",                    "weather": "sira",                   "cluster": "south"},
-    "Ped":  {"name": "Peddakadubur",            "weather": "peddakadubur_fields",    "cluster": "kurnool"},
+    "Ped":  {"name": "Peddakadubur",            "weather": "Peddakadubur",           "cluster": "kurnool"},
     "Din":  {"name": "Kurnool_Dinnedevarapadu", "weather": "kurnool_dinedevarapadu", "cluster": "kurnool"},
     "Bal":  {"name": "Kurnool_Balaji_Villas",   "weather": "kurnool_balaji_villas",  "cluster": "kurnool"},
     "Pul":  {"name": "Kurnool_Pullaiah",        "weather": "kurnool_balaji_villas",  "cluster": "kurnool"},
@@ -77,7 +78,7 @@ SITES = {
 SITE_ORDER = list(SITES)
 # Extra AgERA5 cells (not weather-module sites): name -> (lat, lon). Stored in data/weather_extra/
 # in the weather module's prepared format; the weather model is NOT trained on them.
-WEATHER_EXTRA = {"peddakadubur_fields": (15.8, 77.3)}
+WEATHER_EXTRA: dict = {}          # none needed since weather module v4
 WEATHER_EXTRA_DIR = ROOT / "data" / "weather_extra"
 
 # ---------------------------------------------------------------------------

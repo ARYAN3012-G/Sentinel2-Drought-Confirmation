@@ -7,10 +7,10 @@
 //  1. 3 km circle around each study area. Where circles overlap, each pixel
 //     goes to the nearest area centre (nothing is counted twice).
 //  2. Keep cropland in ESA WorldCover (2020 or 2021).
-//  3. Remove pixels Dynamic World calls "built" in any year 2019-2025, mostly
+//  3. Remove pixels Dynamic World calls "built" in any year 2019-2023, mostly
 //     "trees", or "water" in more than one year (houses, roads, orchards, tank beds).
 //  4. Keep pixels whose Sentinel-2 NDVI shows a crop cycle (green-up and
-//     dry-down) in at least 2 of 7 years (removes scrub and wasteland, but keeps
+//     dry-down) in at least 2 of 5 years (removes scrub and wasteland, but keeps
 //     fields that failed in drought years).
 //  5. Remove edge pixels (touching non-farmland).
 //  6. Mark likely irrigated pixels (green in summer Mar-May, no rain then).
@@ -18,9 +18,10 @@
 //  8. Random sample per site: up to 20 rainfed + 10 irrigated segments.
 // Outputs (Tasks tab -> RUN each):
 //  A_site_cropland_stats   CSV      hectares left after each step, per site
-//  A_field_segments_drive  GeoJSON  all segments (sampled = 1 for the sample)
-//  A_field_segments_asset  Asset    same, used by script B
-//  A_cropland_mask_asset   Asset    farmland mask (site id, irrigated), used by script B
+//  A_field_segments_drive     GeoJSON  field_segments_v2.geojson: all segments (sampled = 1)
+//                                      -> python tools/make_sampled_upload.py -> upload as
+//                                         asset sampled_fields_v2 (used by script B)
+//  A_cropland_mask_v2_asset   Asset    farmland mask (site id, irrigated), used by script B
 // =============================================================================
 
 // ---- 0. SETTINGS -------------------------------------------------------------
@@ -29,18 +30,20 @@
 var ASSET_ROOT = 'projects/serverchat-489517/assets';
 
 var RADIUS_M        = 3000;
-var YEARS           = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
+// v2: TRAINING years only (2019-2023), so the farmland mask, field boundaries and irrigation
+// flag never use validation/test imagery (2024-2026).
+var YEARS           = [2019, 2020, 2021, 2022, 2023];
 // Dynamic World is used only to REMOVE non-farm land. Requiring "crops" in most
 // years dropped dry rainfed fields (Dynamic World often calls them bare/scrub).
-var MAX_TREE_YEARS  = 3;     // remove pixels whose top class is trees in > 3 of 7 years
+var MAX_TREE_YEARS  = 2;     // remove pixels whose top class is trees in > 2 of 5 years
 var MAX_WATER_YEARS = 1;     // remove pixels whose top class is water in > 1 year
-// Crop cycle needed in only 2 of 7 years: requiring most years removed fields
+// Crop cycle needed in only 2 of 5 years: requiring most years removed fields
 // that failed in drought years, i.e. exactly the fields this study needs.
 var MIN_CYCLE_YEARS = 2;
 var CYCLE_PEAK      = 0.35;  // yearly NDVI 90th percentile above this ...
 var CYCLE_AMPLITUDE = 0.15;  // ... and 90th minus 10th percentile above this
 var IRRIG_NDVI      = 0.40;  // summer (Mar-May) NDVI 75th percentile above this ...
-var IRRIG_YEARS     = 3;     // ... in >= 3 years -> likely irrigated
+var IRRIG_YEARS     = 2;     // ... in >= 2 of 5 years -> likely irrigated
 var CLOUD_CS        = 0.60;  // Cloud Score+ clear-sky threshold (higher = stricter)
 var SNIC_SIZE       = 8;     // segment seed spacing in pixels (8 x 10 m = 80 m)
 var MIN_PIX = 30, MAX_PIX = 1000;   // segment size 0.3-10 ha (1 pixel = 0.01 ha)
@@ -50,14 +53,16 @@ var CRS = 'EPSG:32643', SCALE = 10;
 // Area centres (from study_sites_google_earth.kml). weather = site name in the
 // weather module; Lepakshi shares Cholasamudram's ERA5-Land cell.
 var SITES = [
-  {code: 'Som',  name: 'Somandepalle',            lat: 14.0082, lon: 77.6051, weather: 'Somandepalle'},
+  // centres = where the field data were collected (UAV survey); Somandepalle = drone photo
+  // centre in Tungodu village (the dataset table's 13.799997 N is a copy of the Lepakshi point)
+  {code: 'Som',  name: 'Somandepalle',            lat: 13.9988, lon: 77.6247, weather: 'Somandepalle'},
   {code: 'Lep',  name: 'Lepakshi',                lat: 13.7998, lon: 77.6194, weather: 'cholasamudram'},
   {code: 'Cho',  name: 'Cholasamudram',           lat: 13.8118, lon: 77.5687, weather: 'cholasamudram'},
   {code: 'Sira', name: 'Sira',                    lat: 13.7975, lon: 76.9750, weather: 'sira'},
   {code: 'Ped',  name: 'Peddakadubur',            lat: 15.7826, lon: 77.2528, weather: 'Peddakadubur'},
   {code: 'Din',  name: 'Kurnool_Dinnedevarapadu', lat: 15.7715, lon: 78.0471, weather: 'kurnool_dinedevarapadu'},
   {code: 'Bal',  name: 'Kurnool_Balaji_Villas',   lat: 15.7834, lon: 78.0561, weather: 'kurnool_balaji_villas'},
-  {code: 'Pul',  name: 'Kurnool_Pullaiah',        lat: 15.7982, lon: 78.0806, weather: 'kurnool_pulliah'}
+  {code: 'Pul',  name: 'Kurnool_Pullaiah',        lat: 15.7982, lon: 78.0806, weather: 'kurnool_balaji_villas'}
 ];
 
 // ---- 1. Site circles and nearest-centre split ---------------------------------
@@ -131,9 +136,9 @@ var irrigYears = ee.ImageCollection(YEARS.map(function (y) {
 var irrigated = irrigYears.gte(IRRIG_YEARS).unmask(0);
 
 // ---- 7. Field-sized segments (SNIC) on farmland -------------------------------------
-var WINDOWS = [['2023-09-01', '2023-12-01'], ['2023-12-01', '2024-03-01'],
-               ['2024-03-01', '2024-06-01'], ['2024-09-01', '2024-12-01'],
-               ['2024-12-01', '2025-03-01']];
+var WINDOWS = [['2021-09-01', '2021-12-01'], ['2022-09-01', '2022-12-01'],
+               ['2022-12-01', '2023-03-01'], ['2023-03-01', '2023-06-01'],
+               ['2023-09-01', '2023-12-01']];                 // training years only
 var feat = ee.Image.cat(WINDOWS.map(function (w, k) {
   return s2(w[0], w[1]).select('NDVI').median().unmask(0).rename('f' + k);
 })).updateMask(farmland);
@@ -195,22 +200,20 @@ var stats = ee.FeatureCollection(SITES.map(function (s, i) {
 
 // ---- Exports -----------------------------------------------------------------------------
 Export.table.toDrive({collection: stats, description: 'A_site_cropland_stats',
-  folder: 'drought_satellite', fileNamePrefix: 'site_cropland_stats', fileFormat: 'CSV'});
+  folder: 'drought_satellite', fileNamePrefix: 'site_cropland_stats_v2', fileFormat: 'CSV'});
 Export.table.toDrive({collection: segments, description: 'A_field_segments_drive',
-  folder: 'drought_satellite', fileNamePrefix: 'field_segments', fileFormat: 'GeoJSON'});
-Export.table.toAsset({collection: segments, description: 'A_field_segments_asset',
-  assetId: ASSET_ROOT + '/field_segments'});
+  folder: 'drought_satellite', fileNamePrefix: 'field_segments_v2', fileFormat: 'GeoJSON'});
 var maskImg = siteIdx.updateMask(farmland).rename('site')
   .addBands(irrigated.toByte().updateMask(farmland).rename('irrigated')).toByte();
-Export.image.toAsset({image: maskImg, description: 'A_cropland_mask_asset',
-  assetId: ASSET_ROOT + '/cropland_mask', region: AOI.bounds(), crs: CRS, scale: SCALE,
+Export.image.toAsset({image: maskImg, description: 'A_cropland_mask_v2_asset',
+  assetId: ASSET_ROOT + '/cropland_mask_v2', region: AOI.bounds(), crs: CRS, scale: SCALE,
   maxPixels: 1e10});
 
 // ---- Map for visual checking ---------------------------------------------------------
-var rgb = s2('2024-10-01', '2024-12-01').median().clip(AOI);
+var rgb = s2('2023-10-01', '2023-12-01').median().clip(AOI);
 var edges = snic.neq(snic.focalMax(1)).or(snic.neq(snic.focalMin(1))).and(farmland);
 // Only the farmland, irrigated and circle layers are on at start (faster loading).
-Map.addLayer(rgb, {bands: ['B4', 'B3', 'B2'], min: 0, max: 3000}, 'Sentinel-2 Oct-Nov 2024', false);
+Map.addLayer(rgb, {bands: ['B4', 'B3', 'B2'], min: 0, max: 3000}, 'Sentinel-2 Oct-Nov 2023', false);
 Map.addLayer(wcCrop.and(inAOI).selfMask(), {palette: ['orange']}, 'Step 2: WorldCover cropland', false);
 Map.addLayer(beforeEdges.selfMask(), {palette: ['ff8800']}, 'Steps 2-4: before edge removal', false);
 Map.addLayer(wcCrop.and(inAOI).and(dwOK.not()).selfMask(), {palette: ['ff0000']}, 'Check: removed by Dynamic World', false);
@@ -235,7 +238,7 @@ Map.add(ui.Panel([
   ui.Label('Yellow = farmland kept'),
   ui.Label('Blue = likely irrigated'),
   ui.Label('White lines = field segments (turn on in Layers)'),
-  ui.Label('Layers load slowly (7 years of data); zoom in on one site.')
+  ui.Label('Layers load slowly (5 years of data); zoom in on one site.')
 ], null, {position: 'top-left', width: '230px'}));
 Map.setOptions('SATELLITE');
 Map.setCenter(SITES[0].lon, SITES[0].lat, 15);

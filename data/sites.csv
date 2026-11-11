@@ -1,0 +1,9 @@
+site_code,site_name,village,mandal,district,state,centre_lat,centre_lon,centre_source,weather_file,agera5_cell,cluster
+Som,Somandepalle,Tungodu,Somandepalle,Sri Sathya Sai,Andhra Pradesh,13.9988,77.6247,"UAV photo centre (14 photos, 15-11-2025); old pin 14.0082,77.6051 = Somandepalli village",Somandepalle,14.0N 77.6E,south
+Lep,Lepakshi,Mamidimakalapalli,Lepakshi,Sri Sathya Sai,Andhra Pradesh,13.7998,77.6194,"UAV dataset table (13.799838, 77.619387)",cholasamudram,13.8N 77.6E,south
+Cho,Cholasamudram,Cholasamudram,Lepakshi,Sri Sathya Sai,Andhra Pradesh,13.8118,77.5687,"UAV dataset table (13.811762, 77.568719)",cholasamudram,13.8N 77.6E,south
+Sira,Sira,Gidaganahalli,Sira taluk,Tumakuru,Karnataka,13.7975,76.975,"UAV dataset table (13.797532, 76.97503)",sira,13.8N 77.0E,south
+Ped,Peddakadubur,Pedda Thumbalam,Adoni (border with Peddakadubur),Kurnool,Andhra Pradesh,15.7826,77.2528,"UAV dataset table (15.782581, 77.252819); ~8 km W of Peddakadubur town",Peddakadubur,15.8N 77.3E,kurnool
+Din,Kurnool - Dinnedevarapadu,Dinnedevarapadu,Kurnool Rural,Kurnool,Andhra Pradesh,15.7715,78.0471,"UAV dataset table (15.771507, 78.047100)",kurnool_dinedevarapadu,15.8N 78.0E,kurnool
+Bal,Kurnool - Balaji Villas,Kurnool (outskirts),Kurnool Urban,Kurnool,Andhra Pradesh,15.7834,78.0561,"UAV dataset table (15.783407, 78.056083)",kurnool_balaji_villas,15.8N 78.1E,kurnool
+Pul,Kurnool - Pullaiah College,Venkayyapalle,Kurnool Urban,Kurnool,Andhra Pradesh,15.7982,78.0806,"UAV dataset table (15.798243, 78.080614)",kurnool_balaji_villas,15.8N 78.1E,kurnool

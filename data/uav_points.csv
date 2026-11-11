@@ -1,0 +1,11 @@
+point_id,dataset_name,lat,lon,site_code,crop,images,drought_images,healthy_images,note
+UAV_Peddakadubur,Peddakadubur,15.782581,77.252819,Ped,Cotton,160,40,120,
+UAV_Dinnedevarapadu,Dinnedevarapadu,15.771507,78.0471,Din,Cotton,218,0,218,
+UAV_Balaji_villas,Near Balaji villas,15.783407,78.056083,Bal,Cotton,345,0,345,
+UAV_Shilpa_township,Near Shilpa township,15.777797,78.051204,Bal,Cotton,339,0,339,field-visit point inside the Balaji Villas area
+UAV_Puddur,Puddur,15.794037,78.085369,Pul,Maize,265,0,265,field-visit point inside the Pullaiah area
+UAV_Pullaiah_college,Near Pullaiah college,15.798243,78.080614,Pul,Cotton,184,0,184,
+UAV_Cholasamudram,Cholasamudram,13.811762,77.568719,Cho,Maize,54,54,0,
+UAV_Lepakshi,Lepakshi,13.799838,77.619387,Lep,Maize,114,114,0,
+UAV_Somandepalli,Sommandepalli,13.998767,77.624733,Som,Maize,157,157,0,table gives 13.799997 N (copy of the Lepakshi point); centre of the Somandepalle drone photos used
+UAV_Sira,Sira,13.797532,76.97503,Sira,Cotton+Maize,388,234,154,"cotton drought, maize healthy"

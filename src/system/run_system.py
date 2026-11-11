@@ -87,7 +87,7 @@ def _ring_area_centroid(ring):
 
 
 def field_geometry() -> pd.DataFrame:
-    g = json.loads((C.GEE_DIR / "field_segments.geojson").read_text())
+    g = json.loads(C.SEGMENTS_FILE.read_text())
     rows = []
     for f in g["features"]:
         geom = f["geometry"]                     # Polygon, or MultiPolygon for a split segment

@@ -255,7 +255,7 @@ def test_svi_mean_and_spread_fully_exclude_the_scored_year():
 def test_weather_cells_contain_the_site_centres():
     """Each site uses the AgERA5 cell its centre lies in (Pullaiah -> Balaji Villas' cell)."""
     assert C.SITES["Pul"]["weather"] == C.SITES["Bal"]["weather"]
-    assert C.SITES["Ped"]["weather"] in C.WEATHER_EXTRA
+    assert C.SITES["Ped"]["weather"] == "Peddakadubur" and not C.WEATHER_EXTRA
 
 
 def test_labels_exist_after_the_reference_cutoff():

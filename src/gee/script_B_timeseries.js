@@ -1,10 +1,10 @@
 // =============================================================================
 // SCRIPT B — Download real Sentinel-2 time series (2019 - Oct 2026)
 // Drought project, satellite module. Needs two assets:
-//   sampled_fields  the 240 sampled fields (upload src/gee/upload/sampled_fields.zip)
-//   cropland_mask   made by script A (bands: site 0-7, irrigated 0/1)
+//   sampled_fields_v2  the 240 sampled fields (upload src/gee/upload/sampled_fields_v2.zip)
+//   cropland_mask_v2   made by script A (bands: site 0-7, irrigated 0/1)
 // Paste into https://code.earthengine.google.com, press Run, then
-// Tasks tab -> RUN all 3 exports.
+// Tasks tab -> RUN all 4 exports.
 // =============================================================================
 // Outputs (Google Drive folder drought_satellite):
 //  B_field_timeseries.csv  one row per sampled field per clear Sentinel-2 image:
@@ -12,6 +12,7 @@
 //  B_zone_timeseries.csv   whole-area farmland per site, rainfed and irrigated
 //                          separately (zone = site*2 + irrigated): NDVI, NDMI, clear pixels
 //  B_zone_pixels.csv       total farmland pixels per zone (to compute clear fraction)
+//  B_uav_points_timeseries.csv  25 m circles at the 10 UAV survey points (same columns + lat, lon)
 // Same-day duplicates (one field on two overlapping image tiles) are merged in Python.
 // =============================================================================
 
@@ -22,15 +23,15 @@ var CRS = 'EPSG:32643', SCALE = 10;
 
 // Same order as in script A (site index 0-7 in cropland_mask)
 var SITE_CODES = ['Som', 'Lep', 'Cho', 'Sira', 'Ped', 'Din', 'Bal', 'Pul'];
-var SITE_LONLAT = [[77.6051, 14.0082], [77.6194, 13.7998], [77.5687, 13.8118], [76.9750, 13.7975],
+var SITE_LONLAT = [[77.6247, 13.9988], [77.6194, 13.7998], [77.5687, 13.8118], [76.9750, 13.7975],
                    [77.2528, 15.7826], [78.0471, 15.7715], [78.0561, 15.7834], [78.0806, 15.7982]];
 var AOI = ee.FeatureCollection(SITE_LONLAT.map(function (c) {
   return ee.Feature(ee.Geometry.Point(c).buffer(3000));
 })).geometry();
 
 // The 240 sampled fields, uploaded as a shapefile (src/gee/upload/sampled_fields.zip)
-var FIELDS = ee.FeatureCollection(ASSET_ROOT + '/sampled_fields');
-var MASK = ee.Image(ASSET_ROOT + '/cropland_mask');
+var FIELDS = ee.FeatureCollection(ASSET_ROOT + '/sampled_fields_v2');
+var MASK = ee.Image(ASSET_ROOT + '/cropland_mask_v2');
 var ZONE = MASK.select('site').multiply(2).add(MASK.select('irrigated')).rename('zone');
 
 // ---- Sentinel-2 with Cloud Score+ and SCL cloud/shadow masking ----------------
@@ -141,3 +142,27 @@ Map.addLayer(MASK.select('site').randomVisualizer(), {}, 'Farmland by site (from
 Map.addLayer(FIELDS, {color: 'ff0000'}, 'Sampled fields');
 Map.centerObject(FIELDS, 9);
 print('Next: Tasks tab -> RUN all 3 exports.');
+
+// ---- 4. UAV survey points (dataset table, Nov 2025 - Jan 2026) ----------------------
+// A 25 m circle around each surveyed field centre, so the satellite series can be compared
+// with the drone verdicts at the same place. Somandepalli = drone photo centre (see script A).
+var UAV = [
+  ['UAV_Peddakadubur',        15.782581, 77.252819, 'Ped'],
+  ['UAV_Dinnedevarapadu',     15.771507, 78.047100, 'Din'],
+  ['UAV_Balaji_villas',       15.783407, 78.056083, 'Bal'],
+  ['UAV_Shilpa_township',     15.777797, 78.051204, 'Bal'],
+  ['UAV_Puddur',              15.794037, 78.085369, 'Pul'],
+  ['UAV_Pullaiah_college',    15.798243, 78.080614, 'Pul'],
+  ['UAV_Cholasamudram',       13.811762, 77.568719, 'Cho'],
+  ['UAV_Lepakshi',            13.799838, 77.619387, 'Lep'],
+  ['UAV_Somandepalli',        13.998767, 77.624733, 'Som'],
+  ['UAV_Sira',                13.797532, 76.975030, 'Sira']
+];
+var UAV_FC = ee.FeatureCollection(UAV.map(function (u) {
+  return ee.Feature(ee.Geometry.Point([u[2], u[1]]).buffer(25), {
+    field_id: u[0], site: u[0], site_code: u[3], weather: '', irrigated: -1,
+    area_ha: 0.196, pixels: 20, lat: u[1], lon: u[2]});
+}));
+Export.table.toDrive({collection: fieldSeries(UAV_FC), description: 'B_uav_points_timeseries',
+  folder: 'drought_satellite', fileNamePrefix: 'B_uav_points_timeseries', fileFormat: 'CSV',
+  selectors: FIELD_COLS.concat(['lat', 'lon'])});
