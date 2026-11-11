@@ -4,7 +4,7 @@
 //   sampled_fields_v2  the 240 sampled fields (upload src/gee/upload/sampled_fields_v2.zip)
 //   cropland_mask_v2   made by script A (bands: site 0-7, irrigated 0/1)
 // Paste into https://code.earthengine.google.com, press Run, then
-// Tasks tab -> RUN all 4 exports.
+// Tasks tab -> RUN the exports (B_field_timeseries, B_uav_points_timeseries; + 2 zone exports if RUN_ZONES).
 // =============================================================================
 // Outputs (Google Drive folder drought_satellite):
 //  B_field_timeseries.csv  one row per sampled field per clear Sentinel-2 image:
@@ -19,6 +19,9 @@
 var ASSET_ROOT = 'projects/serverchat-489517/assets';
 var START = '2019-01-01', END = '2026-11-01';
 var CLOUD_CS = 0.60;
+// Whole-area farmland series (exports 2-3) are a secondary check and the most expensive part
+// (about 6 EECU-hours). false = only the 240 fields and the 10 UAV points are exported.
+var RUN_ZONES = false;
 var CRS = 'EPSG:32643', SCALE = 10;
 
 // Same order as in script A (site index 0-7 in cropland_mask)
@@ -109,7 +112,7 @@ var zoneTS = S2.map(function (img) {
     });
   }));
 }).flatten().filter(ee.Filter.gt('clear_pixels', 0)).filter(ee.Filter.gt('NDVI', -9000));
-Export.table.toDrive({collection: zoneTS, description: 'B_zone_timeseries',
+if (RUN_ZONES) Export.table.toDrive({collection: zoneTS, description: 'B_zone_timeseries',
   folder: 'drought_satellite', fileNamePrefix: 'B_zone_timeseries', fileFormat: 'CSV',
   selectors: ['date', 'tile', 'zone', 'site_idx', 'irrigated', 'NDVI', 'NDMI', 'clear_pixels']});
 
@@ -125,7 +128,7 @@ var zonePixels = ee.FeatureCollection(ee.List(totals.get('groups')).map(function
                            site_code: ee.List(SITE_CODES).get(z.divide(2).floor()),
                            total_pixels: d.get('count')});
 }));
-Export.table.toDrive({collection: zonePixels, description: 'B_zone_pixels',
+if (RUN_ZONES) Export.table.toDrive({collection: zonePixels, description: 'B_zone_pixels',
   folder: 'drought_satellite', fileNamePrefix: 'B_zone_pixels', fileFormat: 'CSV',
   selectors: ['zone', 'site_idx', 'site_code', 'irrigated', 'total_pixels']});
 
@@ -141,7 +144,7 @@ print('Example: NDVI / NDMI of one field, 2019-2026 (should rise and fall with s
 Map.addLayer(MASK.select('site').randomVisualizer(), {}, 'Farmland by site (from script A)');
 Map.addLayer(FIELDS, {color: 'ff0000'}, 'Sampled fields');
 Map.centerObject(FIELDS, 9);
-print('Next: Tasks tab -> RUN all 3 exports.');
+print('Next: Tasks tab -> RUN the exports listed there (2 with RUN_ZONES = false, 4 with true).');
 
 // ---- 4. UAV survey points (dataset table, Nov 2025 - Jan 2026) ----------------------
 // A 25 m circle around each surveyed field centre, so the satellite series can be compared
