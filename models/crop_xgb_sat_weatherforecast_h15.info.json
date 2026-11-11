@@ -2,7 +2,7 @@
  "feature_set": "sat_weatherforecast",
  "horizon_days": 15,
  "n_features": 228,
- "train_samples": 39390,
- "val_samples": 6101,
+ "train_samples": 36993,
+ "val_samples": 4881,
  "trained_on_target_years": "2019-2023 (early stopping on 2024)"
 }
