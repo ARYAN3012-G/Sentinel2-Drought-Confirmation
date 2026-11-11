@@ -112,10 +112,14 @@ def build_samples(h_days: int, live: bool = False):
             "irrigated": g["irrigated"].iloc[0], "input_start": pd.to_datetime(dates[t_idx - L + 1]),
             "t": t_dates, "target_date": t_dates + pd.Timedelta(days=h_days),
             "y": np.nan_to_num(tgt[keep], nan=-1).astype(int), "label_t": lab_c[t_idx],
-            "svi_t": g["SVI_c"].to_numpy(float)[t_idx]}))
+            "svi_t": g["SVI_c"].to_numpy(float)[t_idx],
+            "svi_prev": g["SVI_c"].to_numpy(float)[t_idx - 3],              # 15 days earlier
+            "age_t": age[t_idx]}))
     meta = pd.concat(metas, ignore_index=True)
     meta["period"] = meta["target_date"].dt.year.map(C.period_of_year)
     meta["input_period"] = meta["input_start"].dt.year.map(C.period_of_year)
+    # a target label is interpolated from images up to MAX_GAP_DAYS after the target date
+    meta["support_period"] = (meta["target_date"] + pd.Timedelta(days=C.MAX_GAP_DAYS)).dt.year.map(C.period_of_year)
     return {b: np.vstack(v) for b, v in parts.items()}, meta
 
 
@@ -124,7 +128,8 @@ def features(blocks, fs: str) -> np.ndarray:
 
 
 def masks(meta: pd.DataFrame, split: str, fold: str | None):
-    purged = (meta["period"] == meta["input_period"]).to_numpy()
+    # purged: inputs, target AND the images the target label is interpolated from lie in one period
+    purged = ((meta["period"] == meta["input_period"]) & (meta["period"] == meta["support_period"])).to_numpy()
     per = meta["period"].to_numpy()
     if split == "temporal":
         return {p: purged & (per == p) for p in ("train", "val", "test")}
@@ -190,16 +195,55 @@ def train_predict(name, X, y, mk, seed, quick):
 
 
 # --------------------------------------------------------------------------- evaluation
-def onset_scores(y, label_t, p):
-    """Among samples Healthy at t: does the forecast rank a drop below normal (class >= 1) at t+h?"""
+def onset_scores(y, label_t, score_below, score_strong):
+    """Among samples normal-or-above at t: ranking of a drop below normal (class >= 1) and of a
+    drop to strongly below normal (class 2) at t+h. Scores: higher = more likely."""
     sel = label_t == 0
-    ev = (y[sel] >= 1).astype(int)
-    score = p[sel, 1] + p[sel, 2]
-    if sel.sum() < 20 or ev.min() == ev.max():
-        return {"onset_n": int(sel.sum()), "onset_rate": np.nan, "onset_roc_auc": np.nan, "onset_pr_auc": np.nan}
-    return {"onset_n": int(sel.sum()), "onset_rate": round(float(ev.mean()), 3),
-            "onset_roc_auc": round(float(roc_auc_score(ev, score)), 3),
-            "onset_pr_auc": round(float(average_precision_score(ev, score)), 3)}
+    out = {"onset_n": int(sel.sum())}
+    for name, ev, sc in (("onset", y[sel] >= 1, score_below[sel]), ("onset_strong", y[sel] == 2, score_strong[sel])):
+        ev = ev.astype(int)
+        ok = sel.sum() >= 20 and 0 < ev.sum() < len(ev)
+        out[f"{name}_rate"] = round(float(ev.mean()), 3) if ok else np.nan
+        out[f"{name}_roc_auc"] = round(float(roc_auc_score(ev, sc)), 3) if ok else np.nan
+        out[f"{name}_pr_auc"] = round(float(average_precision_score(ev, sc)), 3) if ok else np.nan
+    return out
+
+
+def onset_auc_diff_ci(y, label_t, s1, s2, blocks, n_boot):
+    """Paired block bootstrap (blocks = target month) of onset ROC-AUC(s1) - ROC-AUC(s2)."""
+    sel = label_t == 0
+    ev, a, b, bl = (y[sel] >= 1).astype(int), s1[sel], s2[sel], blocks[sel]
+    ub = np.unique(bl)
+    idx = {k: np.where(bl == k)[0] for k in ub}
+    rng = np.random.default_rng(C.BOOTSTRAP_SEED)
+    d = []
+    for _ in range(n_boot):
+        ii = np.concatenate([idx[k] for k in rng.choice(ub, len(ub))])
+        if 0 < ev[ii].sum() < len(ii):
+            d.append(roc_auc_score(ev[ii], a[ii]) - roc_auc_score(ev[ii], b[ii]))
+    return (float(np.percentile(d, 2.5)), float(np.percentile(d, 97.5))) if len(d) > 20 else (np.nan, np.nan)
+
+
+def onset_reference_scores(meta, mk):
+    """Simple onset baselines that need no forecast model (persistence gives every
+    currently-normal field the same score, so its onset ROC-AUC is 0.5 by construction):
+      svi_level  lower current SVI = more likely to drop;
+      svi_trend  falling SVI over the last 15 days;
+      svi_logit  logistic regression on SVI, its 15-day change, season (sin/cos) and image age,
+                 fitted on TRAIN samples that were normal-or-above at t."""
+    from sklearn.linear_model import LogisticRegression
+    doy = meta["t"].dt.dayofyear.to_numpy()
+    Z = np.column_stack([meta["svi_t"], meta["svi_t"] - meta["svi_prev"], np.sin(2 * np.pi * doy / 365.25),
+                         np.cos(2 * np.pi * doy / 365.25), meta["age_t"]]).astype(float)
+    Z = np.nan_to_num(Z, nan=0.0)
+    y, lt = meta["y"].to_numpy(), meta["label_t"].to_numpy()
+    tr = mk["train"] & (lt == 0)
+    lr = LogisticRegression(max_iter=1000).fit(Z[tr], (y[tr] >= 1).astype(int))
+    lr2 = LogisticRegression(max_iter=1000).fit(Z[tr], (y[tr] == 2).astype(int))
+    te = mk["test"]
+    lvl, trend = -Z[te, 0], -Z[te, 1]
+    return {"svi_level": (lvl, lvl), "svi_trend": (trend, trend),
+            "svi_logit": (lr.predict_proba(Z[te])[:, 1], lr2.predict_proba(Z[te])[:, 1])}
 
 
 # Breakdowns of the same TEST predictions (models are not retrained): rainfed / irrigated fields,
@@ -211,12 +255,16 @@ SUBGROUPS = {
 }
 
 
-def evaluate(te, results, n_boot):
-    """te: TEST rows of meta; results: {model: [probs per seed]} for exactly those rows."""
+def evaluate(te, results, n_boot, onset_refs=None):
+    """te: TEST rows of meta; results: {model: [probs per seed]} for exactly those rows;
+    onset_refs: {name: (score below normal, score strongly below)} onset-only baselines."""
     y = te["y"].to_numpy()
     lt = te["label_t"].to_numpy()
     blocks = te["target_date"].dt.strftime("%Y-%m").to_numpy()
+    # sensitivity: 90-day blocks (inputs span 60 days, SPEI up to 90 days)
+    blocks90 = ((te["target_date"] - pd.Timestamp(C.GRID_START)).dt.days // 90).to_numpy()
     pers = results["baseline/persistence"][0].argmax(1)
+    best_ref = onset_refs["svi_logit"][0] if onset_refs else None
     rows = []
     for key, probs in results.items():
         per_seed = [M.compute_metrics(y, p) for p in probs]
@@ -225,9 +273,15 @@ def evaluate(te, results, n_boot):
             v = [d.get(m_, np.nan) for d in per_seed]
             row[m_], row[m_ + "_std"] = np.nanmean(v), np.nanstd(v)
         pm = np.mean(probs, axis=0)
-        row.update(onset_scores(y, lt, pm))
+        row.update(onset_scores(y, lt, pm[:, 1] + pm[:, 2], pm[:, 2]))
         row.update(M.block_bootstrap(y, pm.argmax(1), blocks, n_boot=n_boot, seed=C.BOOTSTRAP_SEED,
                                      pred_ref=None if key == "baseline/persistence" else pers))
+        if key != "baseline/persistence":
+            b = M.block_bootstrap(y, pm.argmax(1), blocks90, n_boot=n_boot, seed=C.BOOTSTRAP_SEED, pred_ref=pers)
+            row["vs_pers90_low"], row["vs_pers90_high"] = b.get("d_macro_f1_ci_low"), b.get("d_macro_f1_ci_high")
+        if best_ref is not None and not key.startswith("baseline/"):
+            row["onset_vs_logit_low"], row["onset_vs_logit_high"] = onset_auc_diff_ci(
+                y, lt, pm[:, 1] + pm[:, 2], best_ref, blocks, min(n_boot, 500))
         fs, _, model = key.partition("/")
         ref1 = f"satellite/{model}"
         if fs not in ("baseline", "satellite") and ref1 in results:
@@ -241,6 +295,8 @@ def evaluate(te, results, n_boot):
                                   pred_ref=np.mean(results[ref2], axis=0).argmax(1))
             row["vs_past_low"], row["vs_past_high"] = b.get("d_macro_f1_ci_low"), b.get("d_macro_f1_ci_high")
         rows.append(row)
+    for name, (s1, s2) in (onset_refs or {}).items():
+        rows.append({"model": f"onset-baseline/{name}", "seeds": 1, **onset_scores(y, lt, s1, s2)})
     return pd.DataFrame(rows)
 
 
@@ -250,11 +306,20 @@ def ci(a, b):
 
 def write_report(split, tables, info):
     lines = [f"# Satellite forecast results — split `{split}`", "",
-             "Target: crop-condition class from SVI (Healthy / Moderate / Severe) h days ahead, sampled "
-             "farmland fields. Macro-F1 on the untouched TEST data: mean ± std over seeds "
-             "[95% block-bootstrap CI, blocks = target month]. Δ columns: paired bootstrap CI of the "
-             "difference; entirely above 0 = significantly better. Onset: among fields Healthy at t, "
-             "ranking of a drop below normal at t+h (ROC-AUC 0.5 = no skill; PR-AUC vs base rate).", "",
+             "Target: SVI class h days ahead (normal or above / below normal / strongly below normal; index "
+             "categories, not validated crop-damage classes), sampled farmland fields. Macro-F1 on the "
+             "untouched TEST data: mean ± std over seeds [95% block-bootstrap CI, blocks = target month]. "
+             "Δ columns: paired bootstrap CI of the difference; entirely above 0 = better than the reference. "
+             "Δ vs persistence (90-d blocks) = the same comparison with 90-day blocks (sensitivity; inputs "
+             "span 60 days, SPEI up to 90). Onset: among fields normal-or-above at t, ranking of a drop below "
+             "normal (onset) or to strongly below normal (onset strong) at t+h. Persistence scores 0.5 there "
+             "by construction, so the fair references are the onset baselines (current SVI level, its 15-day "
+             "trend, and a logistic model on both + season + image age); onset Δ vs logit = paired CI of the "
+             "ROC-AUC difference to that logistic baseline. Samples are purged when inputs, target or the "
+             "images the target label is interpolated from cross a period boundary.", "",
+             "Leave-one-cluster-out = transfer of the CROP model to the other cluster. Its inputs still come "
+             "from the weather module trained on all 7 weather sites and from each field's own SVI normal, "
+             "so it is not a fully unseen-region test.", "",
              "Versions: 1 `satellite` · 2 `sat_pastweather` · 3 `sat_weatherforecast` (integrated "
              "weather -> satellite system) · 4 `sat_futureweather_UPPERBOUND` (perfect weather "
              "forecast, not a usable model) · reference `weather_only`. Δ vs past weather (version 3 "
@@ -267,7 +332,8 @@ def write_report(split, tables, info):
         none = pd.Series([None] * len(df))
         t = pd.DataFrame({
             "model": df["model"],
-            "macro-F1": [f"{r.macro_f1:.3f}" + (f" ± {r.macro_f1_std:.3f}" if r.seeds > 1 else "")
+            "macro-F1": ["" if pd.isna(r.macro_f1) else
+                         f"{r.macro_f1:.3f}" + (f" ± {r.macro_f1_std:.3f}" if r.seeds > 1 else "")
                          + f" [{r.macro_f1_ci_low:.3f}, {r.macro_f1_ci_high:.3f}]" for r in df.itertuples()],
             "Δ vs persistence": [ci(a, b) for a, b in zip(df.get("d_macro_f1_ci_low", none),
                                                           df.get("d_macro_f1_ci_high", none))],
@@ -275,8 +341,13 @@ def write_report(split, tables, info):
                                                              df.get("vs_sat_high", none))],
             "Δ vs past weather": [ci(a, b) for a, b in zip(df.get("vs_past_low", none),
                                                            df.get("vs_past_high", none))],
-            "severe-F1": df["severe_f1"].round(3),
+            "Δ vs persistence (90-d blocks)": [ci(a, b) for a, b in zip(df.get("vs_pers90_low", none),
+                                                                        df.get("vs_pers90_high", none))],
+            "strongly-below F1": df["severe_f1"].round(3),
             "onset ROC-AUC": df["onset_roc_auc"], "onset PR-AUC": df["onset_pr_auc"],
+            "onset Δ vs logit": [ci(a, b) for a, b in zip(df.get("onset_vs_logit_low", none),
+                                                          df.get("onset_vs_logit_high", none))],
+            "onset strong ROC-AUC": df["onset_strong_roc_auc"],
             "onset rate": df["onset_rate"]})
         lines += [to_md(t, index=False), ""]
     (OUT / f"REPORT_{split}.md").write_text("\n".join(lines), encoding="utf-8")
@@ -320,7 +391,8 @@ def main():
                         results[f"{fs}/{model}"] = probs
                 nb = 100 if a.quick else a.n_boot
                 te = meta[mk["test"]]
-                df = evaluate(te, results, nb)
+                orefs = onset_reference_scores(meta, mk)
+                df = evaluate(te, results, nb, orefs)
                 tables[(name, h)] = df
                 summary.append(df.assign(split=split, fold=name, horizon=h))
                 for sub, rule in SUBGROUPS.items():
@@ -331,10 +403,14 @@ def main():
                     info[(sname, h)] = {"train": info[(name, h)]["train"], "val": info[(name, h)]["val"],
                                         "test": int(sel.sum()), "test_classes": " / ".join(
                                             f"{C.CLASS_NAMES[c]} {np.mean(te_y[sel] == c):.0%}" for c in range(K))}
-                    sdf = evaluate(te[sel], {k: [p[sel] for p in v] for k, v in results.items()}, nb)
+                    sdf = evaluate(te[sel], {k: [p[sel] for p in v] for k, v in results.items()}, nb,
+                                   {k: (v[0][sel], v[1][sel]) for k, v in orefs.items()})
                     tables[(sname, h)] = sdf
                     summary.append(sdf.assign(split=split, fold=sname, horizon=h))
                 np.savez_compressed(OUT / f"preds_{split}_{name}_h{h}.npz", y=te_y,
+                                    field_id=te["field_id"].to_numpy(str),
+                                    t=te["t"].dt.strftime("%Y-%m-%d").to_numpy(str),
+                                    target_date=te["target_date"].dt.strftime("%Y-%m-%d").to_numpy(str),
                                     **{k.replace("/", "__"): np.mean(v, 0) for k, v in results.items()})
         pd.concat(summary).to_csv(OUT / f"summary_{split}.csv", index=False)
         write_report(split, tables, info)

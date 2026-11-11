@@ -57,7 +57,11 @@ def weather_module(relpath: str):
 
 # ---------------------------------------------------------------------------
 # Sites. Order = site index used in the Earth Engine cropland mask (zone = idx*2 + irrigated).
-# weather = site file in the weather module (Lepakshi shares Cholasamudram's ERA5-Land cell).
+# weather = AgERA5 0.1-degree cell used for the site = the cell that CONTAINS the site centre.
+#   Lepakshi and Cholasamudram share one cell. Pullaiah's centre lies in Balaji Villas' cell (the
+#   weather module's "kurnool_pulliah" point is 22 km south). Peddakadubur's field-visit centre
+#   lies in cell 15.8N 77.3E, ~10 km north of the weather module's "Peddakadubur" point, so that
+#   cell is downloaded separately (tools/download_weather_cell.py -> data/weather_extra/).
 # cluster = spatial group for leave-one-cluster-out (Kurnool sites are 1.6-4.7 km apart).
 # ---------------------------------------------------------------------------
 SITES = {
@@ -65,12 +69,16 @@ SITES = {
     "Lep":  {"name": "Lepakshi",                "weather": "cholasamudram",          "cluster": "south"},
     "Cho":  {"name": "Cholasamudram",           "weather": "cholasamudram",          "cluster": "south"},
     "Sira": {"name": "Sira",                    "weather": "sira",                   "cluster": "south"},
-    "Ped":  {"name": "Peddakadubur",            "weather": "Peddakadubur",           "cluster": "kurnool"},
+    "Ped":  {"name": "Peddakadubur",            "weather": "peddakadubur_fields",    "cluster": "kurnool"},
     "Din":  {"name": "Kurnool_Dinnedevarapadu", "weather": "kurnool_dinedevarapadu", "cluster": "kurnool"},
     "Bal":  {"name": "Kurnool_Balaji_Villas",   "weather": "kurnool_balaji_villas",  "cluster": "kurnool"},
-    "Pul":  {"name": "Kurnool_Pullaiah",        "weather": "kurnool_pulliah",        "cluster": "kurnool"},
+    "Pul":  {"name": "Kurnool_Pullaiah",        "weather": "kurnool_balaji_villas",  "cluster": "kurnool"},
 }
 SITE_ORDER = list(SITES)
+# Extra AgERA5 cells (not weather-module sites): name -> (lat, lon). Stored in data/weather_extra/
+# in the weather module's prepared format; the weather model is NOT trained on them.
+WEATHER_EXTRA = {"peddakadubur_fields": (15.8, 77.3)}
+WEATHER_EXTRA_DIR = ROOT / "data" / "weather_extra"
 
 # ---------------------------------------------------------------------------
 # Cleaning
@@ -100,7 +108,7 @@ SVI_CLIP = 4.0
 SVI_MODERATE = 0.0            # same thresholds as SPEI classes in the weather module
 SVI_SEVERE = -1.5
 STRESS_Z = -1.0               # "clear stress" for alarm confirmation (SVI < -1)
-CLASS_NAMES = ["Healthy", "Moderate", "Severe"]
+CLASS_NAMES = ["Normal or above", "Below normal", "Strongly below normal"]   # SVI >= 0 / -1.5..0 / < -1.5
 
 # ---------------------------------------------------------------------------
 # Chronological split (by year). Reference years for VCI = TRAIN years only.
@@ -109,6 +117,7 @@ CLASS_NAMES = ["Healthy", "Moderate", "Severe"]
 TRAIN_YEARS = [2019, 2020, 2021, 2022, 2023]
 VAL_YEARS = [2024]
 TEST_YEARS = [2025, 2026]
+REF_CUTOFF = "2023-12-31"     # SVI/VCI normals, irrigation flag and crop check use observations up to here only
 
 
 def period_of_year(y: int) -> str:

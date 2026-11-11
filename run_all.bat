@@ -28,8 +28,8 @@ echo [6/7] Forecast: temporal split
 python src\experiments\run_forecast.py --split temporal || goto :error
 echo [7/7] Forecast: leave-one-cluster-out
 python src\experiments\run_forecast.py --split loco || goto :error
-echo [8/8] Integrated system: train crop model, reports for 2023-09-27, 2026-09-01, 2026-10-01 and the latest date
-python src\system\run_system.py --train --date 2023-09-27 2026-09-01 2026-10-01 || goto :error
+echo [8/8] Integrated system: train crop model, reports for 2023-10-27, 2026-09-01, 2026-10-01 and the latest date
+python src\system\run_system.py --train --date 2023-10-27 2026-09-01 2026-10-01 || goto :error
 python src\system\run_system.py || goto :error
 echo.
 echo DONE. See results\qc\QC_REPORT.md, results\lag\LAG_REPORT.md,

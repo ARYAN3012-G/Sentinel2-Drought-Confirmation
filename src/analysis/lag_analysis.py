@@ -109,11 +109,17 @@ def confirmation(svci: pd.DataFrame, w: pd.DataFrame) -> pd.DataFrame:
             base.append(hit)
             prev = spei30[i - steps_reset:i]
             if spei30[i] < C.ALARM_SPEI and np.all(np.nan_to_num(prev, nan=0) >= C.ALARM_SPEI):
-                alarms.append((dates[i].date(), hit, delay))
+                already = bool(labelled[i] and stress[i])                 # stressed when the alarm fired
+                censored = i + steps_win >= len(dates)                    # follow-up window incomplete
+                alarms.append((dates[i].date(), hit, delay, already, censored))
         n = len(alarms)
         hits = sum(a[1] for a in alarms)
         delays = [a[2] for a in alarms if a[1]]
+        new = [a for a in alarms if not a[3]]
         rows.append(dict(site=site, alarms=n, confirmed=hits,
+                         already_stressed_at_alarm=sum(a[3] for a in alarms),
+                         new_onset_confirmed=f"{sum(a[1] for a in new)}/{len(new)}",
+                         follow_up_incomplete=sum(a[4] for a in alarms),
                          confirmation_rate=round(hits / n, 3) if n else np.nan,
                          base_rate_any_date=round(float(np.mean(base)), 3) if base else np.nan,
                          median_delay_days=float(np.median(delays)) if delays else np.nan,
@@ -145,6 +151,8 @@ def main():
 
     lines = ["# Weather drought -> crop stress", "",
              "## A. Lag correlation (Spearman rho between SVI on day t and SPEI-k on day t-lag)", "",
+             "Descriptive association over all available years, best of 3 scales x 19 lags (not a causal lag; "
+             "SPEI-90 at lag 0 already summarises the previous 90 days of weather).", "",
              "Crop-season steps (Jul-Nov) with a label. Positive rho = wetter weather, healthier crops.", "",
              "### Median over sites (rows: irrigated 0/1, SPEI scale; columns: lag in days)", "",
              to_md(pooled), "",
@@ -153,7 +161,11 @@ def main():
              f"Alarm: SPEI-30 < {C.ALARM_SPEI} after >= {C.ALARM_RESET_DAYS} days above, in Jul-Nov. "
              f"Confirmed: rainfed farmland SVI < {C.STRESS_Z:g} within {C.CONFIRM_WINDOW_DAYS} days. "
              "Base rate = same check for every crop-season date. An alarm is informative only if "
-             "its confirmation rate is clearly above the base rate.", "",
+             "its confirmation rate is clearly above the base rate. Descriptive: alarms come from OBSERVED "
+             "SPEI-30 (not from the weather module's forecasts), sites sharing a weather cell (Lepakshi, "
+             "Cholasamudram) share alarm dates, and 3-7 alarms per site are too few for site-level tests. "
+             "already_stressed_at_alarm = crops were below the threshold when the alarm fired (not a new onset); "
+             "new_onset_confirmed counts only the others.", "",
              "Two sources of site SVI (same label rules): median of the sampled rainfed fields, "
              "and the whole-area rainfed farmland. Share of Jul-Oct 2026 dates with an SVI value:", "",
              to_md(pd.DataFrame(labelled)), ""]

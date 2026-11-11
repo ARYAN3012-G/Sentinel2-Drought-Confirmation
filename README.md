@@ -28,8 +28,8 @@ clone was made without `--recursive` and prepares its data (seconds). No PyTorch
 | 0 | `python src/dataprep/ensure_weather.py` | fetch + prepare the weather module (submodule) |
 | 1 | `python src/dataprep/build_dataset.py` | clean Sentinel-2 series, 5-day grid, VCI labels, QC report |
 | 2 | `python src/dataprep/weather_link.py` | SPEI-30/60/90 and weather on the same 5-day grid |
-| 3 | `python src/dataprep/weather_forecasts.py` | weather-module forecasts (t+7/15/30) for every satellite date |
-| 4 | `python -m pytest tests -q` | 12 integrity / leakage tests |
+| 3 | `python src/dataprep/weather_forecasts.py` | weather-module forecasts (t+7/15/30) for every satellite date; models saved in `models/` and re-used (`--retrain` to refit) |
+| 4 | `python -m pytest tests -q` | 18 integrity / leakage tests (incl. no look-ahead in inputs, reference cutoff, leave-one-year-out SVI) |
 | 5 | `python src/analysis/lag_analysis.py` | weather drought → crop stress: lags, alarm confirmation, seasonal SVI |
 | 5b | `python src/analysis/drought_events.py` | 2023 / 2025 / 2026 seasons side by side, irrigation label check, lag robustness |
 | 6 | `python src/experiments/run_forecast.py` | 15/30-day crop-condition forecasts: 4 versions, baselines, onsets, CIs |
@@ -70,18 +70,24 @@ reflectance, NDVI, NDMI, EVI, clear-pixel count; plus NDVI/NDMI of the whole far
 each site (rainfed and irrigated separately).
 
 Cleaning (`src/dataprep/`): observation kept if ≥ 60 % of the field's pixels are clear;
-same-day tile duplicates merged; isolated NDVI spikes removed; regular 5-day grid.
-Two versions of every series:
-- **interp** (linear, gaps ≤ 30 days) — used only for labels;
-- **causal** (last observation carried forward, ≤ 30 days old) — the only version used as model input.
+same-day tile duplicates merged; regular 5-day grid. Three versions of every series:
+- **interp** (linear, gaps ≤ 30 days, isolated NDVI spikes removed) — used only for labels;
+- **causal** (last accepted observation carried forward, ≤ 30 days old, *no* spike removal because
+  that check looks at the next image) — the only version used as model input;
+- **reference** (as interp, but built only from images up to 31 Dec 2023) — the SVI/VCI normal.
+
+The Earth Engine irrigation flag and crop check used 2019-2025 imagery; both are recomputed per
+field from 2019-2023 images only (`frozen_field_flags`), and that frozen irrigation flag is used
+everywhere (218 of 240 fields agree with the Earth Engine flag). The farmland mask and segments
+themselves remain a retrospective 2019-2025 mapping.
 
 ## 3. Labels: Standardized Vegetation Index (SVI)
 
 SVI = (NDVI − reference mean) / reference spread (Peters et al. 2002), per field and day of year
 (mean ±15 days, spread ±30 days). The reference comes **only from training years 2019-2023**
-and **never from the year being labelled** — the satellite equivalent of the weather module's
-frozen SPEI calibration. Classes use the **same thresholds as SPEI** in the weather module:
-Healthy ≥ 0 · Moderate −1.5 to 0 · Severe < −1.5. Dates with no normal crop signal
+(images up to 31 Dec 2023) and the year being labelled is removed from it **entirely** (mean and
+spread). Classes use the **same numerical thresholds as SPEI**: normal or above ≥ 0 · below normal
+−1.5 to 0 · strongly below normal < −1.5 — index categories, not validated crop-damage classes. Dates with no normal crop signal
 (reference max NDVI < 0.35 or range < 0.10) are unlabelled.
 
 Why not VCI (Kogan 1995)? Its min/max envelope needs a long record; with 4-5 reference years
@@ -90,7 +96,9 @@ VCI is still computed and used as an input.
 
 ## 4. Link to the weather module
 
-Each site uses its weather series (Lepakshi → Cholasamudram's ERA5-Land cell). SPEI-30/60/90
+Each site uses the AgERA5 0.1° cell its centre lies in (Lepakshi and Cholasamudram share one;
+Pullaiah uses Balaji Villas' cell; the Peddakadubur field site's cell is downloaded separately by
+`tools/download_weather_cell.py` into `data/weather_extra/`, forecast-only). SPEI-30/60/90
 are recomputed with the weather module's calibrator (log-logistic, 1979-2011, frozen).
 - **Lag analysis**: correlation of VCI(t) with SPEI-k(t − lag), lag 0-90 days.
 - **Alarm confirmation**: after SPEI-30 falls below −1, how often does rainfed farmland reach
@@ -106,7 +114,9 @@ are recomputed with the weather module's calibrator (log-logistic, 1979-2011, fr
   block-bootstrap 95 % CIs, and **onset** scores (fields healthy at t that drop below normal by
   t+h), which persistence cannot predict by definition.
 
-Weather data run to 2 November 2026 (extended with the weather module's `tools/update_agera5.py`);
+Weather data run to 2 November 2026 (extended with the weather module's `tools/update_agera5.py`).
+AgERA5 is published with a delay of about a week, so a forecast 'h days ahead' of the last
+observation gives about h - 7 days of real warning in operation;
 Jun-Oct 2026 rain was 31-57 % below normal, so the TEST period contains a real drought season.
 Forecast reports also break the TEST results down by rainfed / irrigated fields and for the
 2026 drought season (same trained models, no retraining). Version 3 is compared directly with

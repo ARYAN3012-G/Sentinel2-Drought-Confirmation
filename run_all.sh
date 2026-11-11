@@ -13,5 +13,5 @@ echo "[5/7] Lag analysis";        python src/analysis/lag_analysis.py
 echo "[5/7] Drought events";      python src/analysis/drought_events.py
 echo "[6/7] Forecast temporal";   python src/experiments/run_forecast.py --split temporal
 echo "[7/7] Forecast LOCO";       python src/experiments/run_forecast.py --split loco
-echo "[8/8] Integrated system";   python src/system/run_system.py --train --date 2023-09-27 2026-09-01 2026-10-01 && python src/system/run_system.py
+echo "[8/8] Integrated system";   python src/system/run_system.py --train --date 2023-10-27 2026-09-01 2026-10-01 && python src/system/run_system.py
 echo "DONE. See results/qc, results/lag, results/forecast"

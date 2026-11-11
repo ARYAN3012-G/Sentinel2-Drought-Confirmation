@@ -1,9 +1,9 @@
 """
-Link to the weather module: daily ERA5-Land weather -> the satellite 5-day grid.
+Link to the weather module: daily AgERA5 weather -> the satellite 5-day grid.
 
     python src/dataprep/weather_link.py
 
-For every weather site used by the satellite sites (Lepakshi uses Cholasamudram):
+For every AgERA5 cell used by the satellite sites (config.SITES; extra cells from data/weather_extra/):
   - SPEI-30/60/90 with the weather module's log-logistic calibrator, fitted on 1979-2011
     only and frozen (same rule as the weather module);
   - 5-day values on grid date t use only days t-4 ... t (sums or means), SPEI is the value on day t.
@@ -37,6 +37,10 @@ RAW = {
 
 def load_daily(weather_site: str) -> pd.DataFrame:
     path = C.WEATHER_PREPARED_DIR / f"{weather_site}.csv"
+    if weather_site in C.WEATHER_EXTRA:
+        path = C.WEATHER_EXTRA_DIR / f"{weather_site}.csv"
+        if not path.exists():
+            raise FileNotFoundError(f"{path} missing - run python tools/download_weather_cell.py")
     if not path.exists():
         raise FileNotFoundError(f"{path} missing - run the weather module's "
                                 "src/dataprep/prepare_data.py first.")

@@ -165,7 +165,8 @@ def test_purged_split_and_loco_masks():
     meta = pd.DataFrame({
         "cluster": ["south", "south", "kurnool", "kurnool", "south"],
         "period": ["train", "val", "test", "test", "test"],
-        "input_period": ["train", "train", "test", "test", "test"]})
+        "input_period": ["train", "train", "test", "test", "test"],
+        "support_period": ["train", "val", "test", "test", "test"]})
     mk = R.masks(meta, "temporal", None)
     assert list(mk["val"]) == [False, False, False, False, False]   # crosses periods -> dropped
     mk = R.masks(meta, "loco", "kurnool")
@@ -177,3 +178,87 @@ def test_site_order_matches_earth_engine_zones():
     assert C.SITE_ORDER == ["Som", "Lep", "Cho", "Sira", "Ped", "Din", "Bal", "Pul"]
     assert C.SITES["Lep"]["weather"] == C.SITES["Cho"]["weather"]
     assert {C.SITES[s]["cluster"] for s in ("Din", "Bal", "Pul", "Ped")} == {"kurnool"}
+
+
+def test_label_support_crossing_a_boundary_is_purged():
+    from experiments import run_forecast as R
+    meta = pd.DataFrame({"cluster": ["south"] * 2, "period": ["train", "train"],
+                         "input_period": ["train", "train"], "support_period": ["train", "val"]})
+    assert list(R.masks(meta, "temporal", None)["train"]) == [True, False]
+
+
+def _synthetic_field(seed=0, extra=None):
+    """Seasonal NDVI every ~6 days 2019-2026 with noise; extra = list of (date, ndvi) to append."""
+    rng = np.random.default_rng(seed)
+    d = pd.date_range("2019-01-03", "2026-10-30", freq="6D")
+    doy = d.dayofyear.to_numpy()
+    ndvi = 0.25 + 0.35 * np.exp(-((doy - 270) / 40.0) ** 2) + rng.normal(0, 0.02, len(d))
+    obs = pd.DataFrame({"field_id": "F1", "date": d, "NDVI": ndvi, "NDMI": ndvi - 0.3, "EVI": ndvi * 0.8})
+    if extra:
+        obs = pd.concat([obs, pd.DataFrame([{"field_id": "F1", "date": pd.Timestamp(t), "NDVI": v,
+                                             "NDMI": v - 0.3, "EVI": v * 0.8} for t, v in extra])])
+    obs = obs.sort_values("date").reset_index(drop=True)
+    return obs
+
+
+def _grid(obs):
+    from dataprep.build_dataset import flag_spikes, to_5day
+    obs = obs.copy()
+    obs["spike"] = flag_spikes(obs, "field_id")
+    static = pd.DataFrame({"field_id": ["F1"], "irrigated": [0]})
+    return to_5day(obs, "field_id", static, ["NDVI", "NDMI", "EVI"]).set_index("date")
+
+
+def test_model_inputs_unchanged_by_later_images():
+    """The last image before T jumps up (0.9). With data only up to T it cannot be judged a
+    spike; once later images arrive, the two-sided spike rule removes it. Model inputs up to T
+    must be identical in both cases (the old pipeline changed them: look-ahead)."""
+    T = pd.Timestamp("2025-08-01")
+    full = _synthetic_field()
+    up_to_T = full[full["date"] <= T].copy()
+    last = up_to_T.index[-1]
+    up_to_T.loc[last, "NDVI"] = 0.9
+    full.loc[last, "NDVI"] = 0.9
+    g1, g2 = _grid(up_to_T), _grid(full)
+    cols = ["NDVI_c", "SVI_c", "VCI_c", "age_c"]
+    a, b = g1.loc[:T, cols], g2.loc[:T, cols]
+    assert np.allclose(a.fillna(-99).to_numpy(), b.fillna(-99).to_numpy())
+    d = g2.index[g2.index >= full.loc[last, "date"]][0]               # first grid date after that image
+    assert g2.loc[d, "NDVI_c"] == pytest.approx(0.9)                  # the image is still a model input
+    assert not np.isclose(g2.loc[d, "NDVI"], 0.9)                     # but not part of the label series
+
+
+def test_reference_ignores_images_after_cutoff():
+    base = _synthetic_field()
+    changed = base.copy()
+    m = changed["date"] > pd.Timestamp(C.REF_CUTOFF)
+    changed.loc[m, "NDVI"] = changed.loc[m, "NDVI"] * 0.5            # only post-2023 images differ
+    g1, g2 = _grid(base), _grid(changed)
+    for c in ("ref_mean", "ref_sigma"):
+        assert np.allclose(g1[c].fillna(-99).to_numpy(), g2[c].fillna(-99).to_numpy())
+
+
+def test_svi_mean_and_spread_fully_exclude_the_scored_year():
+    dates = pd.date_range("2019-01-01", "2023-12-31", freq="5D")
+    doy = dates.dayofyear.to_numpy()
+    rng = np.random.default_rng(1)
+    ref = 0.3 + 0.3 * np.exp(-((doy - 270) / 40.0) ** 2) + rng.normal(0, 0.03, len(dates))
+    _, mu1, s1 = svi(dates, ref, ref)
+    ref2 = ref.copy()
+    y21 = dates.year == 2021
+    ref2[y21] = ref2[y21] + rng.normal(0, 0.2, y21.sum())             # change only year 2021
+    _, mu2, s2 = svi(dates, ref2, ref2)
+    assert np.allclose(np.nan_to_num(mu1[y21], nan=-9), np.nan_to_num(mu2[y21], nan=-9))
+    assert np.allclose(np.nan_to_num(s1[y21], nan=-9), np.nan_to_num(s2[y21], nan=-9))
+
+
+def test_weather_cells_contain_the_site_centres():
+    """Each site uses the AgERA5 cell its centre lies in (Pullaiah -> Balaji Villas' cell)."""
+    assert C.SITES["Pul"]["weather"] == C.SITES["Bal"]["weather"]
+    assert C.SITES["Ped"]["weather"] in C.WEATHER_EXTRA
+
+
+def test_labels_exist_after_the_reference_cutoff():
+    g = _grid(_synthetic_field())
+    after = g.index > pd.Timestamp(C.REF_CUTOFF)
+    assert g.loc[after, "SVI"].notna().sum() > 0 and g.loc[after, "label"].notna().sum() > 0

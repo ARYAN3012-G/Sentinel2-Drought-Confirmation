@@ -6,8 +6,11 @@ SVI (Standardized Vegetation Index, Peters et al. 2002) — the LABEL:
     z = (NDVI - mu) / sigma
     mu    = mean reference NDVI within +-VCI_DOY_WINDOW days of the same day of year
     sigma = spread of out-of-sample reference deviations within +-SVI_SIGMA_WINDOW days
+    For a date in a reference year Y, year Y is removed from the reference entirely.
+    The reference uses observations up to C.REF_CUTOFF only (built in build_dataset.py).
 Classes use the weather module's SPEI thresholds, so both modules share one scale:
-    Healthy z >= 0 · Moderate -1.5 <= z < 0 · Severe z < -1.5
+    normal or above z >= 0 · below normal -1.5 <= z < 0 · strongly below normal z < -1.5
+    (0 / 1 / 2; index categories, not validated crop-damage classes)
 
 VCI (Kogan 1995) is kept as an extra input/report variable only: with 4-5 reference years its
 min/max envelope puts ~20 % of all dates at VCI ~ 0 by chance, so it is not used as the label.
@@ -56,8 +59,27 @@ def vci(dates, ndvi, ref_ndvi, ref_years=None):
 
 
 def svi(dates, ndvi, ref_ndvi, ref_years=None):
-    """Returns (z or NaN, mu, sigma)."""
+    """Returns (z or NaN, mu, sigma). Fully leave-one-year-out: for a date in reference year Y,
+    the reference with ALL of year Y removed is used - for mu AND for sigma, whose residuals
+    are taken around means that would otherwise still contain year Y."""
     ref_years = C.TRAIN_YEARS if ref_years is None else ref_years
+    dates = pd.DatetimeIndex(dates)
+    years = np.asarray(dates.year)
+    ndvi = np.asarray(ndvi, float)
+    ref_ndvi = np.asarray(ref_ndvi, float)
+    z, mu, sigma = _svi_once(dates, ndvi, ref_ndvi, ref_years)        # dates outside the reference years
+    for y in ref_years:
+        sel = years == y
+        if not sel.any():
+            continue
+        ref_y = np.where(years == y, np.nan, ref_ndvi)                  # year y removed completely
+        zy, muy, sy = _svi_once(dates, ndvi, ref_y, [r for r in ref_years if r != y])
+        z[sel], mu[sel], sigma[sel] = zy[sel], muy[sel], sy[sel]
+    return z, mu, sigma
+
+
+def _svi_once(dates, ndvi, ref_ndvi, ref_years):
+    """One pass: mu excludes the scored date's own year; residuals exclude each point's own year."""
     _, _, mu, crop = envelope(dates, ref_ndvi, ref_years)
     years, dist, usable, other = _setup(dates, ref_ndvi, ref_years)
     resid = ref_ndvi - mu                                  # out-of-sample: mu excludes own year
