@@ -26,6 +26,10 @@ WGS84 = ('GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0
          'PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]')
 
 
+def _clockwise(ring) -> bool:
+    return sum((x2 - x1) * (y2 + y1) for (x1, y1), (x2, y2) in zip(ring[:-1], ring[1:])) > 0
+
+
 def merge_site_files():
     """Script A with SPLIT_SEGMENTS = true exports one file per site: merge them into one."""
     parts = sorted(SRC.parent.glob("field_segments_v2_*.geojson"))
@@ -51,8 +55,13 @@ def main():
     w.field("pixels", "N", 6)
     for f in feats:
         g, p = f["geometry"], f["properties"]
-        rings = g["coordinates"] if g["type"] == "Polygon" else [r for poly in g["coordinates"] for r in poly]
-        w.poly([[list(map(float, pt[:2])) for pt in r] for r in rings])
+        polys = [g["coordinates"]] if g["type"] == "Polygon" else g["coordinates"]
+        rings = []
+        for poly in polys:                      # shapefile: outer ring clockwise, holes anticlockwise
+            for k, r in enumerate(poly):
+                r = [list(map(float, pt[:2])) for pt in r]
+                rings.append(r if _clockwise(r) == (k == 0) else r[::-1])
+        w.poly(rings)
         w.record(p["field_id"], p["site"], p["site_code"], p["weather_site"], int(p["irrigated"]),
                  float(p["area_ha"]), int(p["pixels"]))
     w.close()
