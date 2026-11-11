@@ -26,7 +26,18 @@ WGS84 = ('GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0
          'PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]')
 
 
+def merge_site_files():
+    """Script A with SPLIT_SEGMENTS = true exports one file per site: merge them into one."""
+    parts = sorted(SRC.parent.glob("field_segments_v2_*.geojson"))
+    if SRC.exists() or not parts:
+        return
+    feats = [f for p in parts for f in json.loads(p.read_text())["features"]]
+    SRC.write_text(json.dumps({"type": "FeatureCollection", "features": feats}))
+    print(f"Merged {len(parts)} site files ({len(feats)} segments) -> {SRC.name}")
+
+
 def main():
+    merge_site_files()
     feats = [f for f in json.loads(SRC.read_text())["features"] if int(f["properties"]["sampled"]) == 1]
     per = Counter((f["properties"]["site_code"], int(f["properties"]["irrigated"])) for f in feats)
     print(f"{len(feats)} sampled fields; per site (rainfed, irrigated):",

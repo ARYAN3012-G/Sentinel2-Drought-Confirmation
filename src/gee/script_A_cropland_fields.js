@@ -201,8 +201,19 @@ var stats = ee.FeatureCollection(SITES.map(function (s, i) {
 // ---- Exports -----------------------------------------------------------------------------
 Export.table.toDrive({collection: stats, description: 'A_site_cropland_stats',
   folder: 'drought_satellite', fileNamePrefix: 'site_cropland_stats_v2', fileFormat: 'CSV'});
-Export.table.toDrive({collection: segments, description: 'A_field_segments_drive',
-  folder: 'drought_satellite', fileNamePrefix: 'field_segments_v2', fileFormat: 'GeoJSON'});
+// SPLIT_SEGMENTS = false: one export of all segments. If that task runs out of memory (red, or
+// stuck at Attempt #3+), set it to true and Run again: one small export per site instead
+// (field_segments_v2_<site>.geojson; tools/make_sampled_upload.py merges them).
+var SPLIT_SEGMENTS = false;
+if (!SPLIT_SEGMENTS) {
+  Export.table.toDrive({collection: segments, description: 'A_field_segments_drive',
+    folder: 'drought_satellite', fileNamePrefix: 'field_segments_v2', fileFormat: 'GeoJSON'});
+} else {
+  SITES.forEach(function (s, i) {
+    Export.table.toDrive({collection: siteSegments(s, i), description: 'A_segments_' + s.code,
+      folder: 'drought_satellite', fileNamePrefix: 'field_segments_v2_' + s.code, fileFormat: 'GeoJSON'});
+  });
+}
 var maskImg = siteIdx.updateMask(farmland).rename('site')
   .addBands(irrigated.toByte().updateMask(farmland).rename('irrigated')).toByte();
 Export.image.toAsset({image: maskImg, description: 'A_cropland_mask_v2_asset',
