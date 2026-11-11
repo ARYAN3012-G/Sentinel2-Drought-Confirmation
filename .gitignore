@@ -18,3 +18,4 @@ src/gee/upload/sampled_fields.*
 # downloads and smoke-test models
 data/downloads/
 models/*_quick.json
+data/gee_exports/field_segments_v2_*.geojson
