@@ -204,7 +204,7 @@ Export.table.toDrive({collection: stats, description: 'A_site_cropland_stats',
 // SPLIT_SEGMENTS = false: one export of all segments. If that task runs out of memory (red, or
 // stuck at Attempt #3+), set it to true and Run again: one small export per site instead
 // (field_segments_v2_<site>.geojson; tools/make_sampled_upload.py merges them).
-var SPLIT_SEGMENTS = false;
+var SPLIT_SEGMENTS = true;
 if (!SPLIT_SEGMENTS) {
   Export.table.toDrive({collection: segments, description: 'A_field_segments_drive',
     folder: 'drought_satellite', fileNamePrefix: 'field_segments_v2', fileFormat: 'GeoJSON'});
