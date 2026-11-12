@@ -396,7 +396,7 @@ def build():
             "Government of Andhra Pradesh, Revenue (DM) Dept. G.O.Ms. 4 (2023), 15 (2024), 6 (2025), 4 and 5 (2026).",
             "Government of India (2016). Manual for Drought Management. Ministry of Agriculture and Farmers Welfare.",
             "Kogan, F. N. (1995). Vegetation index and brightness temperature for drought detection. Adv. Space Res. 15(11).",
-            "Marusov, A. et al. Long-term drought prediction using deep neural networks. Environ. Model. Softw.; arXiv:2309.06212.",
+            "Marusov, A., Grabar, V., Maximov, Y. et al. (2024). Long-term drought prediction using deep neural networks based on geospatial weather data. Environ. Model. Softw. 179; arXiv:2309.06212.",
             "Pasquarella, V. J. et al. (2023). Cloud Score+: cloud and cloud-shadow masking for Sentinel-2. CVPR Workshops.",
             "Peters, A. J. et al. (2002). Drought monitoring with NDVI-based Standardized Vegetation Index. PE&RS 68(1).",
             "Vicente-Serrano, S. M. et al. (2010). A multiscalar drought index sensitive to global warming: the SPEI. J. Climate 23.",
