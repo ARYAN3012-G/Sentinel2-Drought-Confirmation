@@ -211,12 +211,12 @@ def main():
              to_md(lab_year), "",
              "## Labels by site", "", to_md(lab_site), ""]
     dropped = qc_f.attrs.get("dropped", pd.DataFrame())
-    agree = pd.crosstab(qc_f["irrigated_gee"], qc_f["irrigated"], rownames=["Earth Engine flag (2019-25)"],
+    agree = pd.crosstab(qc_f["irrigated_gee"], qc_f["irrigated"], rownames=["Earth Engine flag (pixel level, 2019-23)"],
                         colnames=["frozen flag (2019-23)"])
     lines += ["## Frozen field flags (training years only)", "",
-              "The Earth Engine irrigation flag and crop check used 2019-2025 imagery (incl. validation and "
-              "test years). Both are recomputed per field from 2019-2023 observations only; the frozen "
-              "irrigation flag is the one used everywhere (models, rainfed/irrigated results).", "",
+              "Earth Engine script A v2 flags irrigation per pixel from 2019-2023 imagery; the flag is also "
+              "recomputed per field from the 2019-2023 Sentinel-2 series (same rule), and that field-level "
+              "flag is the one used everywhere (models, rainfed/irrigated results).", "",
               to_md(agree), "",
               f"Fields without a crop cycle in >= 2 of the 5 training years, dropped: {len(dropped)}"
               + (f" ({', '.join(dropped['field_id'])})" if len(dropped) else "") + ".", ""]
