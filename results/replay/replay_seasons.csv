@@ -1,33 +1,33 @@
-year,site,official,official_level,GO_date,first_alarm,first_confirmed,confirmed_dates,dates_with_satellite,confirmed_before_GO,lead_days_before_GO
-2023,Bal,Severe,2.0,2023-10-31,2023-06-01,2023-10-29,4,18,True,2.0
-2023,Cho,Moderate,1.0,2023-10-31,2023-06-16,2023-10-19,7,14,True,12.0
-2023,Din,Not declared,0.0,2023-10-31,2023-06-01,2023-09-04,12,18,True,57.0
-2023,Lep,Moderate,1.0,2023-10-31,2023-06-16,2023-10-24,5,15,True,7.0
-2023,Ped,Moderate (Adoni) / Severe (Peddakadubur),,2023-10-31,2023-06-16,,0,17,False,
-2023,Pul,Severe,2.0,2023-10-31,2023-06-01,2023-11-03,2,18,False,
-2023,Sira,Unknown,,2023-10-31,2023-06-26,2023-09-09,15,27,True,52.0
-2023,Som,Moderate,1.0,2023-10-31,2023-06-16,2023-10-29,5,15,True,2.0
-2024,Bal,Not declared,0.0,2024-10-29,,,0,19,False,
-2024,Cho,Not declared,0.0,2024-10-29,2024-10-09,,0,21,False,
-2024,Din,Not declared,0.0,2024-10-29,,,0,22,False,
-2024,Lep,Not declared,0.0,2024-10-29,2024-10-09,,0,20,False,
-2024,Ped,Not declared (Adoni) / Moderate (Peddakadubur),,2024-10-29,,,0,20,False,
-2024,Pul,Not declared,0.0,2024-10-29,,,0,21,False,
-2024,Sira,Unknown,,2024-10-29,2024-09-29,,0,33,False,
-2024,Som,Not declared,0.0,2024-10-29,,,0,22,False,
-2025,Bal,Not declared,0.0,2025-10-31,,,0,17,False,
-2025,Cho,Moderate,1.0,2025-10-31,2025-09-24,,0,18,False,
-2025,Din,Not declared,0.0,2025-10-31,2025-10-19,,0,16,False,
-2025,Lep,Moderate,1.0,2025-10-31,2025-09-24,,0,16,False,
-2025,Ped,Not declared,0.0,2025-10-31,2025-10-19,,0,16,False,
-2025,Pul,Not declared,0.0,2025-10-31,,,0,23,False,
-2025,Sira,Unknown,,2025-10-31,2025-09-24,,0,30,False,
-2025,Som,Moderate,1.0,2025-10-31,2025-09-24,,0,18,False,
-2026,Bal,Severe,2.0,2026-10-01,2026-07-21,2026-09-09,3,11,True,22.0
-2026,Cho,Severe,2.0,2026-10-01,2026-07-21,2026-10-04,5,12,False,
-2026,Din,Severe,2.0,2026-10-01,2026-07-01,2026-09-09,7,16,True,22.0
-2026,Lep,Severe,2.0,2026-10-01,2026-07-21,2026-09-24,4,15,True,7.0
-2026,Ped,Severe (Adoni) / Not declared (Peddakadubur),,2026-10-01,2026-07-21,,0,11,False,
-2026,Pul,Severe,2.0,2026-10-01,2026-07-21,2026-10-19,1,14,False,
-2026,Sira,Unknown,,2026-10-01,2026-07-26,2026-07-26,14,26,True,67.0
-2026,Som,Severe,2.0,2026-10-01,2026-07-16,2026-10-14,4,14,False,
+year,site,mandal,weather_cell,design,season_end,partial_season,official,official_level,GO_date,first_alarm,first_confirmed,confirmed_dates,dates_with_satellite,confirmed_before_GO,lead_days_before_GO
+2023,Bal,Kurnool Urban,15.8N 78.1E,retrospective,2023-11-28,False,Severe,2.0,2023-10-31,2023-06-01,2023-10-29,4,18,True,2.0
+2023,Cho,Lepakshi,13.8N 77.6E,retrospective,2023-11-28,False,Moderate,1.0,2023-10-31,2023-06-16,2023-10-19,7,14,True,12.0
+2023,Din,Kurnool Rural,15.8N 78.0E,retrospective,2023-11-28,False,Not declared,0.0,2023-10-31,2023-06-01,2023-09-04,12,18,True,57.0
+2023,Lep,Lepakshi,13.8N 77.6E,retrospective,2023-11-28,False,Moderate,1.0,2023-10-31,2023-06-16,2023-10-24,5,15,True,7.0
+2023,Ped,Adoni (border with Peddakadubur),15.8N 77.3E,retrospective,2023-11-28,False,Moderate (Adoni) / Severe (Peddakadubur),,2023-10-31,2023-06-16,,0,17,False,
+2023,Pul,Kurnool Urban,15.8N 78.1E,retrospective,2023-11-28,False,Severe,2.0,2023-10-31,2023-06-01,2023-11-03,2,18,False,
+2023,Sira,Sira taluk,13.8N 77.0E,retrospective,2023-11-28,False,Severe,2.0,2023-09-14,2023-06-26,2023-09-09,15,27,True,5.0
+2023,Som,Somandepalle,14.0N 77.6E,retrospective,2023-11-28,False,Moderate,1.0,2023-10-31,2023-06-16,2023-10-29,5,15,True,2.0
+2024,Bal,Kurnool Urban,15.8N 78.1E,prospective,2024-11-28,False,Not declared,0.0,2024-10-29,,,0,19,False,
+2024,Cho,Lepakshi,13.8N 77.6E,prospective,2024-11-28,False,Not declared,0.0,2024-10-29,2024-10-09,,0,21,False,
+2024,Din,Kurnool Rural,15.8N 78.0E,prospective,2024-11-28,False,Not declared,0.0,2024-10-29,,,0,22,False,
+2024,Lep,Lepakshi,13.8N 77.6E,prospective,2024-11-28,False,Not declared,0.0,2024-10-29,2024-10-09,,0,20,False,
+2024,Ped,Adoni (border with Peddakadubur),15.8N 77.3E,prospective,2024-11-28,False,Not declared (Adoni) / Moderate (Peddakadubur),,2024-10-29,,,0,20,False,
+2024,Pul,Kurnool Urban,15.8N 78.1E,prospective,2024-11-28,False,Not declared,0.0,2024-10-29,,,0,21,False,
+2024,Sira,Sira taluk,13.8N 77.0E,prospective,2024-11-28,False,Unknown,,2024-10-29,2024-09-29,,0,33,False,
+2024,Som,Somandepalle,14.0N 77.6E,prospective,2024-11-28,False,Not declared,0.0,2024-10-29,,,0,22,False,
+2025,Bal,Kurnool Urban,15.8N 78.1E,prospective,2025-11-28,False,Not declared,0.0,2025-10-31,,,0,17,False,
+2025,Cho,Lepakshi,13.8N 77.6E,prospective,2025-11-28,False,Moderate,1.0,2025-10-31,2025-09-24,,0,18,False,
+2025,Din,Kurnool Rural,15.8N 78.0E,prospective,2025-11-28,False,Not declared,0.0,2025-10-31,2025-10-19,,0,16,False,
+2025,Lep,Lepakshi,13.8N 77.6E,prospective,2025-11-28,False,Moderate,1.0,2025-10-31,2025-09-24,,0,16,False,
+2025,Ped,Adoni (border with Peddakadubur),15.8N 77.3E,prospective,2025-11-28,False,Not declared,0.0,2025-10-31,2025-10-19,,0,16,False,
+2025,Pul,Kurnool Urban,15.8N 78.1E,prospective,2025-11-28,False,Not declared,0.0,2025-10-31,,,0,23,False,
+2025,Sira,Sira taluk,13.8N 77.0E,prospective,2025-11-28,False,Unknown,,2025-10-31,2025-09-24,,0,30,False,
+2025,Som,Somandepalle,14.0N 77.6E,prospective,2025-11-28,False,Moderate,1.0,2025-10-31,2025-09-24,,0,18,False,
+2026,Bal,Kurnool Urban,15.8N 78.1E,prospective,2026-10-24,True,Severe,2.0,2026-10-01,2026-07-21,2026-09-09,3,10,True,22.0
+2026,Cho,Lepakshi,13.8N 77.6E,prospective,2026-10-24,True,Severe,2.0,2026-10-01,2026-07-21,2026-10-04,4,11,False,
+2026,Din,Kurnool Rural,15.8N 78.0E,prospective,2026-10-24,True,Severe,2.0,2026-10-01,2026-07-01,2026-09-09,6,15,True,22.0
+2026,Lep,Lepakshi,13.8N 77.6E,prospective,2026-10-24,True,Severe,2.0,2026-10-01,2026-07-21,2026-09-24,4,14,True,7.0
+2026,Ped,Adoni (border with Peddakadubur),15.8N 77.3E,prospective,2026-10-24,True,Severe (Adoni) / Not declared (Peddakadubur),,2026-10-01,2026-07-21,,0,10,False,
+2026,Pul,Kurnool Urban,15.8N 78.1E,prospective,2026-10-24,True,Severe,2.0,2026-10-01,2026-07-21,2026-10-19,1,13,False,
+2026,Sira,Sira taluk,13.8N 77.0E,prospective,2026-10-24,True,Unknown (likely declared),,2026-10-01,2026-07-26,2026-07-26,13,25,True,67.0
+2026,Som,Somandepalle,14.0N 77.6E,prospective,2026-10-24,True,Severe,2.0,2026-10-01,2026-07-16,2026-10-14,3,13,False,
