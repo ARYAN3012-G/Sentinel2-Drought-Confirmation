@@ -108,9 +108,9 @@ are recomputed with the weather module's calibrator (log-logistic, 1979-2011, fr
 - **Lag analysis**: correlation of VCI(t) with SPEI-k(t − lag), lag 0-90 days.
 - **Alarm confirmation**: after SPEI-30 falls below −1, how often does rainfed farmland reach
   SVI < −1 within 60 days, compared with the base rate for any date?
-- **Weather-module forecasts as input**: the weather module's best model (weather_spei_doy,
-  XGBoost, trained 1979-2011) forecasts the SPEI class at t+7/15/30 for every date from 2019;
-  these reproduce its published test scores (macro-F1 0.765 / 0.632 / 0.436).
+- **Weather-module forecasts as input**: the weather module's best configuration by validation
+  (v4 physics-informed hybrid weather_spei_doy_wb, XGBoost, trained 1979-2011) forecasts the SPEI class at t+7/15/30 for every date from 2019;
+  these reproduce its v4 test scores (XGBoost hybrid macro-F1 0.814 / 0.631 / 0.418).
 - **Forecasting**: SVI class 15 / 30 days ahead, four versions on identical samples:
   1 satellite history · 2 + past weather · 3 + weather-module forecast (the integrated system) ·
   4 + actual future weather (upper bound = perfect weather forecast) · reference weather only.

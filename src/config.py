@@ -151,7 +151,7 @@ WEATHER_FEATURES = ["P", "ET0", "WB", "Tmax", "Tmin", "RHmax", "RHmin", "Solar",
                     "SPEI30", "SPEI60", "SPEI90"]
 # Weather-module forecasts used as inputs (src/dataprep/weather_forecasts.py)
 WEATHER_FC_HORIZONS = [7, 15, 30]
-WEATHER_FC_FEATURE_SET = "weather_spei_doy"      # best weather configuration by validation
+WEATHER_FC_FEATURE_SET = "weather_spei_doy_wb"      # best weather configuration by validation
 WEATHER_FC_START = "2018-12-01"
 # Observed weather AFTER t (upper bound only, not a usable model): sums over (t, t+h], SPEI at t+h
 FUTURE_SUM = ["P", "ET0", "WB"]
