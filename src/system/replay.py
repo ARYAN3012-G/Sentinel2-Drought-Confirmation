@@ -47,7 +47,7 @@ def level(status: str) -> int:
     return 2 if s.startswith("severe") else 1 if s.startswith("moderate") else 0 if "not declared" in s else np.nan
 
 
-def daily(years) -> pd.DataFrame:
+def daily(years, stress_z: float = C.STRESS_Z) -> pd.DataFrame:
     f = pd.read_csv(C.CLEAN_DIR / "fields_5day.csv", parse_dates=["date"])
     w = pd.read_csv(C.CLEAN_DIR / "weather_5day.csv", parse_dates=["date"])
     fc = pd.read_csv(C.CLEAN_DIR / "weather_forecasts.csv", parse_dates=["date"])
@@ -71,7 +71,7 @@ def daily(years) -> pd.DataFrame:
                 alarm = spei30 < C.ALARM_SPEI or severe_fc
                 ok = len(last) >= MIN_SAT_FIELDS
                 med = float(last.SVI_c.median()) if len(last) else np.nan
-                conf = ok and med < C.STRESS_Z
+                conf = ok and med < stress_z
                 status = ("insufficient satellite data" if not ok else
                           "drought" if alarm and conf else
                           "drought continuing" if conf and spei90 < C.ALARM_SPEI else
@@ -104,6 +104,8 @@ def seasons(dd: pd.DataFrame) -> pd.DataFrame:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--years", nargs="+", type=int, default=[2023, 2024, 2025, 2026])
+    ap.add_argument("--sensitivity", nargs="*", type=float, default=[-0.75, -1.25],
+                    help="extra confirmation thresholds to report (robustness only; -1 is the rule)")
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     dd = daily(a.years)
@@ -127,6 +129,18 @@ def main():
              f"{int(decl.confirmed_before_GO.sum())} of {len(decl)}; median lead "
              f"{decl.lead_days_before_GO.median():.0f} days.", "",
              "Small sample (one area per mandal, 4 seasons): read as case evidence, not a statistical test.", ""]
+    sens = []
+    for z in [C.STRESS_Z] + list(a.sensitivity):
+        k = seasons(dd if z == C.STRESS_Z else daily(a.years, z))
+        k = k[k.official_level.notna()]
+        d_ = k[k.official_level > 0]
+        sens.append({"confirmation threshold (SVI <)": z,
+                     "severe confirmed": f"{int((k[k.official_level == 2].confirmed_dates > 0).sum())}/{int((k.official_level == 2).sum())}",
+                     "moderate confirmed": f"{int((k[k.official_level == 1].confirmed_dates > 0).sum())}/{int((k.official_level == 1).sum())}",
+                     "not declared but confirmed": f"{int((k[k.official_level == 0].confirmed_dates > 0).sum())}/{int((k.official_level == 0).sum())}",
+                     "declared, confirmed before G.O.": f"{int(d_.confirmed_before_GO.sum())}/{len(d_)}"})
+    lines += ["## Sensitivity to the confirmation threshold (robustness check; the rule stays SVI < -1)", "",
+              to_md(pd.DataFrame(sens), index=False), ""]
     (OUT / "REPLAY_REPORT.md").write_text("\n".join(lines), encoding="utf-8")
     print(to_md(tab))
     print(ss[["year", "site", "official", "first_alarm", "first_confirmed", "lead_days_before_GO"]].to_string(index=False))
