@@ -90,8 +90,9 @@ def seasons(dd: pd.DataFrame) -> pd.DataFrame:
         g = g.sort_values("issue_date")
         a = g[g.alarm].issue_date
         c = g[g.status.isin(["drought", "drought continuing"])].issue_date
-        go = pd.Timestamp(GO_DATES[y]).date()
         dec = gov[(gov.site_code == s) & (gov.year == y)]
+        od = dec.order_date.iloc[0] if len(dec) and "order_date" in dec and isinstance(dec.order_date.iloc[0], str) else ""
+        go = pd.Timestamp(od if od else GO_DATES[y]).date()          # Karnataka (Sira) has its own order dates
         st = dec.status.iloc[0] if len(dec) else "unknown"
         out.append(dict(year=y, site=s, official=st, official_level=level(st), GO_date=go,
                         first_alarm=a.min() if len(a) else None, first_confirmed=c.min() if len(c) else None,
