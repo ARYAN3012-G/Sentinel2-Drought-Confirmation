@@ -65,6 +65,14 @@ def main():
             low = rec["SVI_min_30d_before"]
             rec["satellite_verdict"] = ("no label (no normal crop signal or no clear image)" if np.isnan(svi) and np.isnan(low)
                                         else "stressed" if np.nanmin([svi, low]) < C.STRESS_Z else "not stressed")
+        else:                                                   # flight date unknown: survey window
+            win = s.loc["2025-10-15":"2026-01-31"]
+            if win.SVI.notna().any():
+                med = float(win.SVI.median())
+                rec.update({"flight_date": "unknown (window 15 Oct 2025 - 31 Jan 2026)",
+                            "SVI": round(med, 2), "SVI_min_30d_before": round(float(win.SVI.min()), 2),
+                            "satellite_verdict": ("stressed" if med < C.STRESS_Z else "not stressed")
+                            + " (median over the window)"})
         rows.append(rec)
     t = pd.DataFrame(rows)
     t.to_csv(OUT / "uav_points_satellite.csv", index=False)
@@ -72,7 +80,9 @@ def main():
              "Sentinel-2 in a 25 m circle at each UAV survey point (same cleaning and SVI reference as the "
              "sampled fields: 2019-2023, own year excluded). UAV verdict = majority of the UAV team's labelled "
              "images (dataset table; not produced here). Satellite verdict = stressed if SVI < -1 on the last "
-             "clear image before the flight or at any point in the 30 days before it.", "",
+             "clear image before the flight or at any point in the 30 days before it. Where the flight date is "
+             "unknown (Dinnedevarapadu, Shilpa township), the median SVI over the survey window 15 Oct 2025 - "
+             "31 Jan 2026 is used. No field boundaries were available: a 25 m circle around each point is used.", "",
              "Caution: the flights were in Nov 2025 - Jan 2026, partly after the kharif harvest. A harvested or "
              "drying maize field has low NDVI whatever the season, and SVI is unlabelled where the field has no "
              "normal crop signal at that time of year. Read disagreements with the crop stage in mind.", "",
