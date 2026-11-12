@@ -212,7 +212,7 @@ def build():
 
     # ---------------- 1 summary
     st += [P("1. Summary", "h1"),
-           P("A weather-to-satellite early-warning chain for rainfed farmland confirmed every severe drought season "
+           P("A weather-to-satellite early-warning chain for rainfed farmland eventually confirmed every severe drought season "
              "declared in 2023-2026 (9 of 9, Andhra Pradesh and Karnataka) and stayed silent in 10 of 11 seasons with no "
              "declaration. All results are on held-out years, with leakage tests, physical and statistical baselines and "
              "confidence intervals."),
@@ -224,8 +224,9 @@ def build():
                    "(ρ 0.48 in training, 0.45 on unseen years 2024-2026).",
                    "<b>Early warning:</b> fields about to fall below normal within 15 days are ranked at ROC-AUC 0.76, "
                    "+0.02 to +0.07 over a fair statistical baseline.",
-                   "<b>Operational replay:</b> severe 9/9 confirmed, 10/11 undeclared seasons quiet, 8 of 15 declared "
-                   "seasons confirmed before the government order (median 7 days earlier).",
+                   "<b>Operational replay:</b> severe 9/9 confirmed eventually, 5/9 before the government order (median "
+                   "lead 7 days); each decision counted once: 6/6 severe mandal-seasons, 5 before the order; "
+                   "10/11 undeclared seasons quiet (prospective 2024-2026: 10/10). 2026 is partial (data to 24 Oct).",
                    "<b>Honest negatives:</b> weather adds no significant skill to crop forecasts beyond satellite history; "
                    "single-date agreement with UAV verdicts is weak (3 of 10 fields clear, 2 mixed)."]),
            Spacer(1, 8),
@@ -309,7 +310,7 @@ def build():
              "clearly above the base rate at Balaji Villas, Dinnedevarapadu and Cholasamudram.")]
 
     # ---------------- 7 forecasts
-    st += [PageBreak(), P("7. Result: crop forecasts and early warning of stress", "h1"),
+    st += [P("7. Result: crop forecasts and early warning of stress", "h1"),
            table([["Version", "15 days", "Δ vs persistence [95% CI]", "30 days"],
                   ["Persistence (no change)", "0.648", "", "0.520"],
                   ["1  Satellite history", "0.668", "[-0.004, +0.036]", "0.555"],
@@ -323,11 +324,14 @@ def build():
                    "Interpretation: crop stress at 15-30 days is set mostly by water already lost, so the weather stage's value is the earlier meteorological alarm."])
 
     # ---------------- 8 replay
-    st += [P("8. Result: operational replay against government declarations", "h1"),
-           P("Every 5 days from 1 June to 30 November, with weather 7 days late and satellite 2 days late. Alarm: "
+    st += [PageBreak(), P("8. Result: operational replay against government declarations", "h1"),
+           P("Every 5 days from 1 June to 30 November or the end of the data, with weather 7 days late and satellite 2 days late. Alarm: "
              "SPEI-30 < -1 or a severe +15-day forecast. Confirmed: median rainfed SVI < -1 from at least 5 clear "
-             "fields; fewer fields = 'insufficient data'. No crop model is used, so all seasons are out of sample.", "intro"),
-           table([["Site", "2023", "2024", "2025", "2026"],
+             "fields; fewer fields = 'insufficient data'. Thresholds and delays were fixed before the replay was written; "
+             "weather older than 5 days is not used; the 2026 season ends with the data on 24 October. No crop model "
+             "is used. 2023 is <b>retrospective</b> (field selection and irrigation flag used 2019-2023 imagery); "
+             "2024-2026 are <b>prospective</b>.", "intro"),
+           table([["Site", "2023 (retrospective)", "2024", "2025", "2026 (to 24 Oct)"],
                   ["Somandepalle", "Moderate: 2 d before", "none: quiet", "Moderate: missed", "Severe: after order"],
                   ["Lepakshi", "Moderate: 7 d before", "none: quiet", "Moderate: missed", "Severe: 7 d before"],
                   ["Cholasamudram", "Moderate: 12 d before", "none: quiet", "Moderate: missed", "Severe: after order"],
@@ -338,12 +342,15 @@ def build():
                   ["Peddakadubur", "ambiguous mandal", "ambiguous", "none: quiet", "ambiguous"]],
                  [0.24, 0.19, 0.19, 0.19, 0.19]),
            P("Table 6. Official declaration and system result per site and season.", "cap"),
-           table([["Official declaration", "System confirmed", "Not confirmed"],
-                  ["Severe (9 site-seasons)", "9", "0"],
-                  ["Moderate (6)", "3", "3 (all 2025)"],
-                  ["Not declared (11)", "1", "10"]],
-                 [0.40, 0.30, 0.30]),
-           P("Table 7. Agreement. 8 of 15 declared site-seasons were confirmed before the order (median 7 days). "
+           table([["Official declaration", "Site-seasons: confirmed eventually", "Site-seasons: before the order",
+                   "Mandal-seasons: eventually", "Mandal-seasons: before the order"],
+                  ["Severe", "9 / 9", "5 / 9", "6 / 6", "5 / 6"],
+                  ["Moderate", "3 / 6", "3 / 6", "2 / 4", "2 / 4"],
+                  ["Not declared (false alarm)", "1 / 11", "", "1 / 8", ""],
+                  ["Prospective 2024-2026 only", "severe 6/6", "severe 3/6", "false alarms 0/10", ""]],
+                 [0.24, 0.19, 0.19, 0.19, 0.19]),
+           P("Table 7. Agreement, counted per site-season and per mandal-season (each official decision once; "
+             "Lepakshi and Cholasamudram share a mandal and weather cell, as do Balaji Villas and Pullaiah). "
              "Thresholds -0.75 / -1.25 leave the false-alarm count unchanged.", "cap")]
 
     # ---------------- 9 mismatches
@@ -373,8 +380,8 @@ def build():
 
     # ---------------- 11 limitations
     st += [PageBreak(), P("11. Limitations", "h1")]
-    st += bullets(["Short satellite record: normals rest on five years and the test years hold one full drought season (2026).",
-                   "Few events: 3-7 alarms per site and 15 declared site-seasons; agreement figures are case evidence.",
+    st += bullets(["Short satellite record: normals rest on five years; the test years hold one drought season (2026, data to 24 October); 2023 results are retrospective because field selection used 2019-2023 imagery.",
+                   "Few events: 3-7 alarms per site and 10 distinct declared mandal-seasons; agreement figures are case evidence.",
                    "Monsoon clouds often leave fewer than 5 clear fields in August-September, delaying confirmation.",
                    "SVI classes are index categories, not measured damage; irrigation is inferred from dry-season greenness.",
                    "Spatial mismatch between mandals, 3 km areas and single fields; for Sira only 2023 is confirmed by name.",
