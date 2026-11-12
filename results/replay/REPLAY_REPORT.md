@@ -50,3 +50,11 @@ Every 5 days, 1 Jun - 30 Nov, with weather 7 days late (AgERA5) and satellite 2 
 Declared site-seasons confirmed by the system before the G.O. date: 7 of 14; median lead 7 days.
 
 Small sample (one area per mandal, 4 seasons): read as case evidence, not a statistical test.
+
+## Sensitivity to the confirmation threshold (robustness check; the rule stays SVI < -1)
+
+| confirmation threshold (SVI <) | severe confirmed | moderate confirmed | not declared but confirmed | declared, confirmed before G.O. |
+|---|---|---|---|---|
+| -1.0000 | 8/8 | 3/6 | 1/11 | 7/14 |
+| -0.7500 | 8/8 | 3/6 | 1/11 | 9/14 |
+| -1.2500 | 5/8 | 3/6 | 1/11 | 5/14 |
