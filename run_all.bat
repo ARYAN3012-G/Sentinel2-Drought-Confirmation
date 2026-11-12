@@ -33,6 +33,8 @@ python src\experiments\run_forecast.py --split loco || goto :error
 echo [8/8] Integrated system: train crop model, reports for 2023-10-27, 2026-09-01, 2026-10-01 and the latest date
 python src\system\run_system.py --train --date 2023-10-27 2026-09-01 2026-10-01 || goto :error
 python src\system\run_system.py || goto :error
+echo [8/8] Operational replay 2023-2026 vs official declarations
+python src\system\replay.py || goto :error
 echo.
 echo DONE. See results\qc\QC_REPORT.md, results\lag\LAG_REPORT.md,
 echo results\forecast\REPORT_temporal.md and REPORT_loco.md

@@ -67,6 +67,50 @@ def lag_correlation(f: pd.DataFrame, w: pd.DataFrame) -> tuple[pd.DataFrame, pd.
     return corr, best
 
 
+def frozen_lag(f: pd.DataFrame, w: pd.DataFrame, n_boot: int = 500) -> tuple[pd.DataFrame, str]:
+    """Choose the SPEI scale and lag on the TRAINING years only (median rho over sites, per
+    irrigation class), then measure that choice on 2024-2026 - so the reported link is not the
+    best of 57 tries on the same data. CI of the rainfed - irrigated difference: bootstrap over
+    site x year blocks (pooled Spearman rho per class)."""
+    d = f[f["date"].dt.month.isin(C.CROP_SEASON_MONTHS) & f["SVI"].notna()]
+    d = add_lagged_spei(d[["field_id", "site_code", "irrigated", "weather", "date", "SVI"]], w)
+    tr = d[d["date"].dt.year.isin(C.TRAIN_YEARS)]
+    te = d[~d["date"].dt.year.isin(C.TRAIN_YEARS)]
+    rows, choice = [], {}
+    for irr in (0, 1):
+        best, bk = -9, None
+        for k in C.SPEI_SCALES:
+            for lag in C.LAGS_DAYS:
+                col = f"SPEI{k}_lag{lag}"
+                med = tr[tr.irrigated == irr].groupby("site_code").apply(
+                    lambda g: g["SVI"].corr(g[col], method="spearman")).median()
+                if med > best:
+                    best, bk = med, (k, lag)
+        choice[irr] = bk
+        col = f"SPEI{bk[0]}_lag{bk[1]}"
+        per = te[te.irrigated == irr].groupby("site_code").apply(lambda g: g["SVI"].corr(g[col], method="spearman"))
+        rows.append(dict(irrigated=irr, chosen_on="2019-2023", spei_scale=bk[0], lag_days=bk[1],
+                         rho_train_median=round(best, 3), rho_test_median=round(per.median(), 3),
+                         rho_test_min=round(per.min(), 3), rho_test_max=round(per.max(), 3)))
+    col0 = f"SPEI{choice[0][0]}_lag{choice[0][1]}"
+    col1 = f"SPEI{choice[1][0]}_lag{choice[1][1]}"
+    te = te.assign(block=te["site_code"] + "_" + te["date"].dt.year.astype(str))
+    blocks = te["block"].unique()
+    idx = {b: te.index[te["block"] == b] for b in blocks}
+    rng = np.random.default_rng(0)
+    diffs = []
+    for _ in range(n_boot):
+        s = te.loc[np.concatenate([idx[b] for b in rng.choice(blocks, len(blocks))])]
+        r0 = s[s.irrigated == 0]
+        r1 = s[s.irrigated == 1]
+        if len(r0) > 30 and len(r1) > 30:
+            diffs.append(r0["SVI"].corr(r0[col0], method="spearman") - r1["SVI"].corr(r1[col1], method="spearman"))
+    lo, hi = np.percentile(diffs, [2.5, 97.5])
+    note = (f"Rainfed minus irrigated pooled rho on 2024-2026 (frozen choices): 95% CI [{lo:+.2f}, {hi:+.2f}] "
+            f"({n_boot} bootstrap samples of site x year blocks).")
+    return pd.DataFrame(rows), note
+
+
 def site_rainfed_vci(f: pd.DataFrame, z: pd.DataFrame | None) -> dict[str, pd.DataFrame]:
     """Rainfed SVI per site from two sources, reported side by side:
     - median of the 20 sampled rainfed fields (each field is small, so it is often cloud-free);
@@ -141,6 +185,8 @@ def main():
     best.to_csv(OUT / "best_lag.csv", index=False)
     pooled = (corr.groupby(["irrigated", "spei_scale", "lag_days"])["rho"].median()
               .unstack("lag_days").round(2))
+    fl, fl_note = frozen_lag(f, w)
+    fl.to_csv(OUT / "frozen_lag.csv", index=False)
     sources = site_rainfed_vci(f, z)
     conf = {k: confirmation(v, w) for k, v in sources.items()}
     pd.concat([c.assign(source=k) for k, c in conf.items()]).to_csv(OUT / "confirmation.csv", index=False)
@@ -157,6 +203,8 @@ def main():
              "### Median over sites (rows: irrigated 0/1, SPEI scale; columns: lag in days)", "",
              to_md(pooled), "",
              "### Strongest link per site", "", to_md(best.round(3), index=False), "",
+             "### Frozen choice: scale and lag chosen on 2019-2023, tested on 2024-2026", "",
+             to_md(fl, index=False), "", fl_note, "",
              "## B. Does a weather alarm predict satellite-confirmed stress?", "",
              f"Alarm: SPEI-30 < {C.ALARM_SPEI} after >= {C.ALARM_RESET_DAYS} days above, in Jul-Nov. "
              f"Confirmed: rainfed farmland SVI < {C.STRESS_Z:g} within {C.CONFIRM_WINDOW_DAYS} days. "
