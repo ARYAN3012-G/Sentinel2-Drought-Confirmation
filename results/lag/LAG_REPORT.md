@@ -38,6 +38,15 @@ Crop-season steps (Jul-Nov) with a label. Positive rho = wetter weather, healthi
 | Som | 0 | 30 | 75 | 0.5750 | 812 |
 | Som | 1 | 60 | 50 | 0.3030 | 423 |
 
+### Frozen choice: scale and lag chosen on 2019-2023, tested on 2024-2026
+
+| irrigated | chosen_on | spei_scale | lag_days | rho_train_median | rho_test_median | rho_test_min | rho_test_max |
+|---|---|---|---|---|---|---|---|
+| 0 | 2019-2023 | 30 | 10 | 0.4790 | 0.4460 | 0.1600 | 0.5820 |
+| 1 | 2019-2023 | 60 | 15 | 0.2390 | 0.2940 | 0.1170 | 0.4560 |
+
+Rainfed minus irrigated pooled rho on 2024-2026 (frozen choices): 95% CI [-0.02, +0.24] (500 bootstrap samples of site x year blocks).
+
 ## B. Does a weather alarm predict satellite-confirmed stress?
 
 Alarm: SPEI-30 < -1.0 after >= 30 days above, in Jul-Nov. Confirmed: rainfed farmland SVI < -1 within 60 days. Base rate = same check for every crop-season date. An alarm is informative only if its confirmation rate is clearly above the base rate. Descriptive: alarms come from OBSERVED SPEI-30 (not from the weather module's forecasts), sites sharing a weather cell (Lepakshi, Cholasamudram) share alarm dates, and 3-7 alarms per site are too few for site-level tests. already_stressed_at_alarm = crops were below the threshold when the alarm fired (not a new onset); new_onset_confirmed counts only the others.
