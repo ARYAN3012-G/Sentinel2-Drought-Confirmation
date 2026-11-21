@@ -22,8 +22,10 @@ echo [4/7] Integrity / leakage tests
 python -m pytest tests -q || goto :error
 echo [5/7] Lag analysis: weather drought -^> crop stress
 python src\analysis\lag_analysis.py || goto :error
-echo [5/7] Drought events 2023/2025/2026, irrigation label check, lag robustness
+echo [5/7] Drought events (kharif and rabi), irrigation label check, lag robustness
 python src\analysis\drought_events.py || goto :error
+echo [5/7] Exploratory rabi indicators (sowing share, irrigated fields)
+python src\analysis\rabi_extra.py || goto :error
 echo [5/7] Satellite view of the UAV survey fields
 python src\analysis\uav_points.py || goto :error
 echo [6/7] Forecast: temporal split
