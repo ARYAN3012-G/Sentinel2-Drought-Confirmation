@@ -14,8 +14,18 @@ Rules fixed before looking at the outcome against the declarations:
   B  Irrigated fields: mean Dec-Feb SVI per irrigated field (the fields actually cropped in rabi).
      FLAG: site median < -1 (the confirmation threshold used everywhere).
 
+REGISTERED RULES for the prospective test on rabi 2026-27 (registered 2026-11-21, before that
+season; see docs/PREREGISTRATION_rabi_2026-27.md). Fixed here in code so the git history dates them:
+  R1 end of season : rainfed active share 1 Dec - 31 Mar < 75 % of the rainfed normal
+  R2 early, 15 Feb : same rule on the CAUSAL series (NDVI_c), observations 1 Dec - 13 Feb (issue date
+                     minus the 2-day satellite delay), normal over the same window
+  Field counted with >= R_MIN_VALUES[rule] values in the window; site evaluated with >= R_MIN_FIELDS
+  such rainfed fields, else 'insufficient'. Evaluation unit: mandal x rabi season (flag if any site
+  in the mandal flags), against the AP rabi drought order. Results for 2023-24 .. 2025-26 are shown
+  too but are POST HOC (the rule was chosen after seeing them), not a test.
+
     python src/analysis/rabi_extra.py
-Output: results/events/{rabi_extra.csv, RABI_EXTRA_REPORT.md}
+Output: results/events/{rabi_extra.csv, rabi_registered.csv, RABI_EXTRA_REPORT.md}
 """
 from __future__ import annotations
 
@@ -35,8 +45,56 @@ EVAL = [2023, 2024, 2025]                  # rabi 2023-24, 2024-25, 2025-26 (dec
 SOWN_P90, SOWN_RANGE, SOWING_FLAG, IRR_FLAG = 0.35, 0.15, 0.75, C.STRESS_Z
 
 
+REGISTERED_SEASON = 2026                   # rabi 2026-27: the prospective test season
+R_FLAG = 0.75
+R_MIN_VALUES = {"R1": 12, "R2": 8}         # of 24 / ~15 five-day values in the window
+R_MIN_FIELDS = 10
+SAT_DELAY_DAYS = 2
+
+
 def window(y):
     return pd.Timestamp(f"{y}-12-01"), pd.Timestamp(f"{y + 1}-03-31")
+
+
+def r_window(rule: str, y: int):
+    lo = pd.Timestamp(f"{y}-12-01")
+    hi = pd.Timestamp(f"{y + 1}-03-31") if rule == "R1" else \
+        pd.Timestamp(f"{y + 1}-02-15") - pd.Timedelta(days=SAT_DELAY_DAYS)
+    return lo, hi
+
+
+def registered(f: pd.DataFrame, sites: pd.DataFrame, gov: pd.DataFrame) -> pd.DataFrame:
+    """Registered rules R1 / R2 on the rainfed sampled fields (see module docstring)."""
+    rf = f[f.irrigated == 0]
+    col = {"R1": "NDVI", "R2": "NDVI_c"}
+    rows = []
+    for rule in ("R1", "R2"):
+        for y in NORMAL + EVAL + [REGISTERED_SEASON]:
+            lo, hi = r_window(rule, y)
+            if rf.date.max() < hi:                     # season not complete in the data yet
+                continue
+            s = rf[rf.date.between(lo, hi) & rf[col[rule]].notna()]
+            n = s.groupby("field_id")[col[rule]].count()
+            s = s[s.field_id.isin(n[n >= R_MIN_VALUES[rule]].index)]
+            q = s.groupby("field_id")[col[rule]].quantile([0.1, 0.9]).unstack()
+            act = ((q[0.9] > SOWN_P90) & (q[0.9] - q[0.1] > SOWN_RANGE)).rename("active")
+            t = s.groupby("field_id").site_code.first().to_frame().join(act)
+            for code, g in t.groupby("site_code"):
+                rows.append(dict(rule=rule, rabi=y, site=code, fields=len(g), active_share=g.active.mean()))
+    r = pd.DataFrame(rows, columns=["rule", "rabi", "site", "fields", "active_share"])
+    if r.empty:
+        return r
+    norm = r[r.rabi.isin(NORMAL)].groupby(["rule", "site"]).active_share.mean().rename("normal")
+    r = r[~r.rabi.isin(NORMAL)].join(norm, on=["rule", "site"])
+    r["pct_of_normal"] = (100 * r.active_share / r.normal).round()
+    r["status"] = np.where(r.fields < R_MIN_FIELDS, "insufficient",
+                           np.where(r.active_share < R_FLAG * r.normal, "flag", "no flag"))
+    r["design"] = np.where(r.rabi == REGISTERED_SEASON, "PROSPECTIVE TEST", "post hoc (not a test)")
+    r = r.merge(gov[["site_code", "year", "status"]].rename(
+        columns={"site_code": "site", "year": "rabi", "status": "official"}), on=["site", "rabi"], how="left")
+    r["mandal"] = r.site.map(sites["mandal"])
+    r["rabi_label"] = r.rabi.astype(str) + "-" + (r.rabi + 1).astype(str).str[2:]
+    return r
 
 
 def main():
@@ -126,6 +184,28 @@ def main():
              "## Each official decision once (mandal x rabi season)", "", to_md(summ, index=False), "",
              to_md(m.drop(columns=["level"]).round(2), index=False), "",
              "## Per site", "", to_md(e[cols].round(2), index=False), ""]
+    reg = registered(f, sites, gov)
+    reg.to_csv(OUT / "rabi_registered.csv", index=False)
+    rm = pd.DataFrame()
+    if len(reg):
+        k = reg.assign(level=reg.official.map(lev))
+        k = k[k.level.notna()]
+        rm = (k.groupby(["rule", "design", "rabi_label", "mandal"])
+              .agg(level=("level", "first"), flag=("status", lambda x: (x == "flag").any())).reset_index())
+        rm = pd.DataFrame([{"rule": r, "design": dsg,
+                            "severe: flagged": f"{int(g[g.level == 2].flag.sum())}/{int((g.level == 2).sum())}",
+                            "moderate: flagged": f"{int(g[g.level == 1].flag.sum())}/{int((g.level == 1).sum())}",
+                            "not declared: flagged": f"{int(g[g.level == 0].flag.sum())}/{int((g.level == 0).sum())}"}
+                           for (r, dsg), g in rm.groupby(["rule", "design"])])
+    lines += ["## Registered rules for rabi 2026-27 (R1 end of season, R2 early on 15 Feb)", "",
+              "Registered 2026-11-21 (docs/PREREGISTRATION_rabi_2026-27.md). Rainfed sampled fields only. "
+              "Rows for 2023-24 .. 2025-26 are POST HOC: the rule was written after seeing them, so they show "
+              "how it behaves, not how well it works. Only rabi 2026-27 is a test.", "",
+              "### Mandal x rabi season (each official decision once; ambiguous / unknown excluded)", "",
+              to_md(rm, index=False) if len(rm) else "(none)", "",
+              "### Per site", "",
+              to_md(reg[["rule", "rabi_label", "design", "site", "mandal", "official", "fields", "pct_of_normal",
+                         "status"]].round(2), index=False) if len(reg) else "(no complete season yet)", ""]
     (OUT / "RABI_EXTRA_REPORT.md").write_text("\n".join(lines), encoding="utf-8")
     print(summ.to_string(index=False))
     print(m.drop(columns=["level"]).round(2).to_string(index=False))
