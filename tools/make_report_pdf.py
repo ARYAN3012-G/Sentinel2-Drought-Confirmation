@@ -435,8 +435,8 @@ def build():
                    "mainly on the Kurnool side (Ped 20, Pul 20, Bal 17; Som, Lep, Sira 3-4; Cho 0). Protocol v1 "
                    "(fixed 21 Nov 2026, before its development check) flags a site when fewer fields are sown than "
                    "normal or the sown fields are less green than their own normal, issued 15 February.",
-                   "<b>Development check</b> on 2023-24 to 2025-26 (retrospective): 1 of 5 severe mandal-seasons and "
-                   "5 of 10 undeclared ones flagged. In Kurnool 2023-24 and 2024-25 (declared severe) rabi fields were "
+                   "<b>Development check</b> on 2023-24 to 2025-26 (retrospective): 0 of 4 severe mandal-seasons and "
+                   "5 of 10 undeclared ones flagged (Peddakadubur 2023-24 is ambiguous: Adoni severe, Pedda Kadubur not declared). In Kurnool 2023-24 and 2024-25 (declared severe) rabi fields were "
                    "sown and green as normal; in 2025-26 (not declared) fewer were sown after almost no December-February "
                    "rain. Field-level rabi activity and the rabi orders disagree on these seasons; rabi 2026-27 is the "
                    "prospective test, with unchanged rules."])
@@ -451,7 +451,7 @@ def build():
                    "AgERA5 is about a week late, so 7-day forecasts give little real warning; 15 days gives about a week.",
                    "No skill beyond persistence at 30 days; UAV comparison uses post-harvest flights and no field boundaries.",
                    "Rabi: no severe rabi case confirmed on in-season images (0/4); the explanation is a hypothesis under a registered test.",
-                   "Site-to-mandal assignment uses the site centre, not a polygon overlay with official mandal boundaries."])
+                   "Mandal boundaries (official 2018 sub-district polygons, results/qc/MANDAL_CHECK.md): all fields of Somandepalle, Cholasamudram and the three Kurnool sites lie in their mandal; 37% of Lepakshi fields lie in Chilamathur and 23% of Sira fields in Agali; 70% of Peddakadubur fields lie in Pedda Kadubur although the centre is in Adoni, so Peddakadubur is scored only when both mandals agree. The 2018 polygons cannot separate Kurnool Urban from Kurnool Rural (split in 2022)."])
 
     # ---------------- 12 references
     st += [P("13. References", "h1")]
