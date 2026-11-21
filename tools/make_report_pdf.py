@@ -229,8 +229,8 @@ def build():
                    "4 prospective 2026), 5 before the order, all on in-season images; both prospective moderate cases "
                    "(2025) missed. 2026 is partial (data to 24 Oct).",
                    "<b>Rabi (Dec-Mar):</b> 0 of 4 severe rabi mandal-seasons confirmed on in-season images; the only "
-                   "confirmation was carry-over of kharif stress. A rainfed rule is registered for a prospective test "
-                   "on rabi 2026-27.",
+                   "confirmation was carry-over of kharif stress. Claims are therefore kharif-only; rabi continues as a "
+                   "separate project on rabi-crop fields, with rules fixed before rabi 2026-27.",
                    "<b>Honest negatives:</b> weather adds no significant skill to crop forecasts beyond satellite history; "
                    "single-date agreement with UAV verdicts is weak (3 of 10 fields clear, 2 mixed)."]),
            Spacer(1, 8),
@@ -317,13 +317,23 @@ def build():
     st += [P("7. Result: crop forecasts and early warning of stress", "h1"),
            table([["Version", "15 days", "Δ vs persistence [95% CI]", "30 days"],
                   ["Persistence (no change)", "0.648", "", "0.520"],
-                  ["1  Satellite history", "0.668", "[-0.004, +0.036]", "0.555"],
-                  ["2  + past weather", "0.677", "[+0.011, +0.038]", "0.553"],
-                  ["3  + weather-module forecast", "0.677", "[+0.013, +0.041]", "0.553"],
-                  ["4  + actual future weather (upper bound)", "0.685", "[+0.016, +0.052]", "0.575"]],
+                  ["1  Satellite history", "0.667", "[-0.002, +0.035]", "0.555"],
+                  ["2  + past weather", "0.675", "[+0.011, +0.035]", "0.553"],
+                  ["3  + weather-module forecast", "0.675", "[+0.012, +0.040]", "0.551"],
+                  ["4  + actual future weather (upper bound)", "0.686", "[+0.015, +0.052]", "0.573"]],
                  [0.42, 0.16, 0.26, 0.16]),
-           P("Table 5. Macro-F1 on test years 2025-2026 (XGBoost, 5 seeds).", "cap")]
-    st += bullets(["Weather versions beat persistence at 15 days (also with 90-day bootstrap blocks) but not satellite history alone; the weather forecast adds nothing beyond past weather.",
+           P("Table 5. Macro-F1 on test years 2025-2026 (XGBoost, 5 seeds; lab rerun 21 Nov 2026 with newer "
+             "library versions, all scores within 0.003 of the previous run).", "cap"),
+           table([["Target season (15 days)", "Persistence", "1  Satellite history", "3  + weather forecast", "Weather alone"],
+                  ["Kharif, all fields (Jun-Nov)", "0.608", "0.628", "0.632", "0.33"],
+                  ["Kharif, rainfed fields", "0.592", "0.629", "0.639", "0.33"],
+                  ["Rabi, all fields (Dec-Mar)", "0.654", "0.660", "0.673", "0.36"]],
+                 [0.32, 0.16, 0.18, 0.18, 0.16]),
+           P("Table 5b. The same test predictions split by the season of the target date (XGBoost). Kharif: random "
+             "forest on satellite history reaches 0.656, the only model whose gain over persistence is significant "
+             "([+0.009, +0.076]). Rabi: no model differs significantly from persistence. The weather stage itself "
+             "works in both seasons (hybrid, 7/15 days, one seed: kharif 0.823 / 0.606, rabi 0.810 / 0.651).", "cap")]
+    st += bullets(["Weather versions beat persistence at 15 days (also with 90-day bootstrap blocks). Against satellite history alone the gain is borderline: its interval was [-0.001, +0.023] in the first run and [+0.001, +0.019] in the rerun, so it is not claimed as robust; the weather forecast adds nothing beyond past weather.",
                    "<b>Onset warning</b>: among fields normal today, the models rank those falling below normal by day 15 at ROC-AUC 0.76 (30 days: 0.70), vs 0.72 for a logistic baseline on current SVI and its trend.",
                    "Interpretation: crop stress at 15-30 days is set mostly by water already lost, so the weather stage's value is the earlier meteorological alarm."])
 
@@ -416,7 +426,20 @@ def build():
                    "season, R2 as an early warning on 15 February 2027 using only data available then; flag below 75% "
                    "of the 2019-20 to 2022-23 normal, scored per mandal. On 2023-24 to 2025-26 it would have flagged "
                    "2/4 (R1) and 3/4 (R2) severe cases and 0/10 undeclared ones, but it was written after seeing those "
-                   "seasons, so these figures describe the rule and are not evidence."])
+                   "seasons, so these figures describe the rule and are not evidence.",
+                   "<b>Separate rabi project</b> (github.com/ARYAN3012-G/Rabi-Drought-Monitoring-). The kharif claims "
+                   "are restricted to kharif; rabi is restarted on fields that historically grow a rabi crop. Earth "
+                   "Engine selects farmland that was green in January-March in at least 2 of the 4 seasons 2019-20 to "
+                   "2022-23 with a 'dip then rise' curve (a first version without this rule picked mostly late kharif "
+                   "crops drying out). 233 fields are frozen: 20 irrigated per site, but rainfed rabi fields exist "
+                   "mainly on the Kurnool side (Ped 20, Pul 20, Bal 17; Som, Lep, Sira 3-4; Cho 0). Protocol v1 "
+                   "(fixed 21 Nov 2026, before its development check) flags a site when fewer fields are sown than "
+                   "normal or the sown fields are less green than their own normal, issued 15 February.",
+                   "<b>Development check</b> on 2023-24 to 2025-26 (retrospective): 1 of 5 severe mandal-seasons and "
+                   "5 of 10 undeclared ones flagged. In Kurnool 2023-24 and 2024-25 (declared severe) rabi fields were "
+                   "sown and green as normal; in 2025-26 (not declared) fewer were sown after almost no December-February "
+                   "rain. Field-level rabi activity and the rabi orders disagree on these seasons; rabi 2026-27 is the "
+                   "prospective test, with unchanged rules."])
 
     # ---------------- 12 limitations
     st += [PageBreak(), P("12. Limitations", "h1")]
