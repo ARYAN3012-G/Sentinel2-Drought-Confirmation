@@ -1,0 +1,25 @@
+stage,model,season,n,macro_f1,balanced_accuracy
+weather class +7 d,persistence,all months,17178,0.658,0.656
+weather class +7 d,hybrid XGBoost (seed 0),all months,17178,0.81,0.84
+weather class +7 d,persistence,kharif (Jun-Nov),8616,0.712,0.706
+weather class +7 d,hybrid XGBoost (seed 0),kharif (Jun-Nov),8616,0.823,0.84
+weather class +7 d,persistence,other (Apr-May),2928,0.683,0.707
+weather class +7 d,hybrid XGBoost (seed 0),other (Apr-May),2928,0.773,0.801
+weather class +7 d,persistence,rabi (Dec-Mar),5634,0.521,0.512
+weather class +7 d,hybrid XGBoost (seed 0),rabi (Dec-Mar),5634,0.81,0.87
+weather class +15 d,persistence,all months,17178,0.512,0.51
+weather class +15 d,hybrid XGBoost (seed 0),all months,17178,0.631,0.65
+weather class +15 d,persistence,kharif (Jun-Nov),8616,0.544,0.539
+weather class +15 d,hybrid XGBoost (seed 0),kharif (Jun-Nov),8616,0.606,0.618
+weather class +15 d,persistence,other (Apr-May),2928,0.552,0.583
+weather class +15 d,hybrid XGBoost (seed 0),other (Apr-May),2928,0.622,0.635
+weather class +15 d,persistence,rabi (Dec-Mar),5634,0.363,0.367
+weather class +15 d,hybrid XGBoost (seed 0),rabi (Dec-Mar),5634,0.651,0.721
+weather class +30 d,persistence,all months,17178,0.422,0.421
+weather class +30 d,hybrid XGBoost (seed 0),all months,17178,0.417,0.42
+weather class +30 d,persistence,kharif (Jun-Nov),8616,0.425,0.422
+weather class +30 d,hybrid XGBoost (seed 0),kharif (Jun-Nov),8616,0.41,0.418
+weather class +30 d,persistence,other (Apr-May),2928,0.355,0.357
+weather class +30 d,hybrid XGBoost (seed 0),other (Apr-May),2928,0.34,0.338
+weather class +30 d,persistence,rabi (Dec-Mar),5634,0.431,0.424
+weather class +30 d,hybrid XGBoost (seed 0),rabi (Dec-Mar),5634,0.448,0.469

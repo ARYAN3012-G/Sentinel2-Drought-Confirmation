@@ -252,6 +252,11 @@ SUBGROUPS = {
     "rainfed fields": lambda te: (te["irrigated"] == 0).to_numpy(),
     "irrigated fields": lambda te: (te["irrigated"] == 1).to_numpy(),
     "2026 drought season (targets Jul-Nov 2026)": lambda te: te["target_date"].between("2026-07-01", "2026-11-30").to_numpy(),
+    # the headline tables pool all months; kharif claims must rest on the kharif rows
+    "kharif targets (Jun-Nov)": lambda te: te["target_date"].dt.month.between(6, 11).to_numpy(),
+    "rabi targets (Dec-Mar)": lambda te: te["target_date"].dt.month.isin([12, 1, 2, 3]).to_numpy(),
+    "kharif targets, rainfed fields": lambda te: (te["target_date"].dt.month.between(6, 11)
+                                                  & (te["irrigated"] == 0)).to_numpy(),
 }
 
 
