@@ -139,6 +139,7 @@ ALARM_SPEI = -1.0                     # weather alarm: SPEI-30 drops below -1
 ALARM_RESET_DAYS = 30                 # new alarm only after 30 days above the threshold
 CONFIRM_WINDOW_DAYS = 60              # satellite confirms if SVI < STRESS_Z within 60 days
 CROP_SEASON_MONTHS = [7, 8, 9, 10, 11]
+RABI_MONTHS = [12, 1, 2, 3]           # rabi / North-East monsoon season (AP rabi drought orders)
 
 # ---------------------------------------------------------------------------
 # Forecasting: predict the VCI class h days ahead

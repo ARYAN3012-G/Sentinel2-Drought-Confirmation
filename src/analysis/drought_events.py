@@ -28,7 +28,8 @@ import config as C  # noqa: E402
 
 to_md = C.weather_module("utils/report.py").to_md
 OUT = C.RESULTS_DIR / "events"
-SEASONS = [2023, 2025, 2026]
+SEASONS = [2023, 2024, 2025, 2026]          # kharif seasons with official declarations
+RABI_SEASONS = [2023, 2024, 2025]           # rabi 2023-24, 2024-25, 2025-26
 DROUGHT_YEARS = [2023, 2026]
 
 
@@ -48,6 +49,44 @@ def rain_vs_normal() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def rain_ne_monsoon() -> pd.DataFrame:
+    """Oct-Dec (North-East monsoon) rainfall per weather site and year vs the 1979-2011 normal."""
+    rows = []
+    for path in sorted((C.WEATHER_DIR / "data" / "prepared").glob("*.csv")):
+        d = pd.read_csv(path, usecols=["valid_time", "Precipitation_Flux"], parse_dates=["valid_time"])
+        od = d[d["valid_time"].dt.month.between(10, 12)].groupby(d["valid_time"].dt.year)["Precipitation_Flux"].sum()
+        normal = od.loc[1979:2011].mean()
+        for y in RABI_SEASONS:
+            if y in od.index:
+                rows.append({"weather": path.stem, "year": y, "rain_oct_dec_mm": round(od[y]),
+                             "rain_vs_normal_pct": round(100 * (od[y] / normal - 1))})
+    return pd.DataFrame(rows)
+
+
+def rabi_seasons(f, w) -> pd.DataFrame:
+    """Rabi y = Dec y - Mar y+1: NE-monsoon rain, SPEI and rainfed greenness."""
+    rain = rain_ne_monsoon()
+    rows = []
+    for (site, wx), g in f.groupby(["site_code", "weather"]):
+        for y in RABI_SEASONS:
+            lo, hi = pd.Timestamp(f"{y}-12-01"), pd.Timestamp(f"{y + 1}-03-31")
+            s = g[g.date.between(lo, hi)]
+            core = s[s.date.between(lo, pd.Timestamp(f"{y + 1}-02-28")) & (s.irrigated == 0)]
+            per_field = core.groupby("field_id")["SVI"].mean().dropna()
+            ww = w[(w.weather == wx) & w.date.between(lo, pd.Timestamp(f"{y + 1}-02-28"))]
+            r = rain[(rain.weather == wx) & (rain.year == y)]
+            rows.append({"site": site, "season": "rabi", "year": y, "rabi": f"{y}-{str(y + 1)[2:]}",
+                         "rain_oct_dec_mm": r.rain_oct_dec_mm.iloc[0] if len(r) else np.nan,
+                         "rain_vs_normal_%": r.rain_vs_normal_pct.iloc[0] if len(r) else np.nan,
+                         "SPEI30_dec_feb": round(ww["SPEI30"].mean(), 2) if len(ww) else np.nan,
+                         "SPEI90_dec_feb": round(ww["SPEI90"].mean(), 2) if len(ww) else np.nan,
+                         "SVI_rainfed_dec_mar": round(s[s.irrigated == 0]["SVI"].mean(), 2),
+                         "SVI_irrigated_dec_mar": round(s[s.irrigated == 1]["SVI"].mean(), 2),
+                         "rainfed_fields_below_normal_%": round(100 * (per_field < -1).mean()) if len(per_field) else np.nan,
+                         "rainfed_fields_n": len(per_field)})
+    return pd.DataFrame(rows)
+
+
 def drought_seasons(f, w) -> pd.DataFrame:
     rain = rain_vs_normal()
     rows = []
@@ -60,7 +99,7 @@ def drought_seasons(f, w) -> pd.DataFrame:
             per_field = sep_oct.groupby("field_id")["SVI"].mean()
             r = rain[(rain.weather == wx) & (rain.year == y)]
             rows.append({
-                "site": site, "year": y,
+                "site": site, "season": "kharif", "year": y,
                 "rain_jun_oct_mm": r.rain_jun_oct_mm.iloc[0] if len(r) else np.nan,
                 "rain_vs_normal_%": r.rain_vs_normal_pct.iloc[0] if len(r) else np.nan,
                 "SPEI30_aug_oct": round(ww["SPEI30"].mean(), 2) if len(ww) else np.nan,
@@ -123,23 +162,32 @@ def main():
     f = pd.read_csv(C.CLEAN_DIR / "fields_5day.csv", parse_dates=["date"])
     w = pd.read_csv(C.CLEAN_DIR / "weather_5day.csv", parse_dates=["date"])
     ds, ic, lr = drought_seasons(f, w), irrigation_check(f, w), lag_robustness(f, w)
+    dr = rabi_seasons(f, w)
     gov = C.ROOT / "data" / "official" / "drought_declarations.csv"   # AP G.O.s, see that folder
     if gov.exists():
-        g = pd.read_csv(gov)[["site_code", "year", "mandal", "status"]].rename(
+        g = pd.read_csv(gov)
+        if "season" not in g:
+            g["season"] = "kharif"
+        g = g[["site_code", "season", "year", "mandal", "status"]].rename(
             columns={"site_code": "site", "status": "official_declaration"})
-        ds = ds.merge(g, on=["site", "year"], how="left")
-        ds["official_declaration"] = ds["official_declaration"].fillna(
-            ds["year"].map({2025: "not checked (rain above normal)"}))
+        ds = ds.merge(g, on=["site", "season", "year"], how="left")
+        dr = dr.merge(g, on=["site", "season", "year"], how="left")
     ds.to_csv(OUT / "drought_seasons.csv", index=False)
+    dr.to_csv(OUT / "drought_seasons_rabi.csv", index=False)
     ic.to_csv(OUT / "irrigation_check.csv", index=False)
     lr.to_csv(OUT / "lag_by_left_out_year.csv", index=False)
     lines = ["# Drought events and label checks", "",
-             "## A. Drought seasons (2023, 2026 dry; 2025 normal)", "",
+             "## A. Kharif seasons (2023 and 2026 dry; 2024 and 2025 near or above normal)", "",
              "Rain = Jun-Oct total vs 1979-2011 normal (AgERA5). SVI < 0 = greener-than-normal is lost. "
              "Field shares: rainfed sampled fields with mean Sep-Oct SVI < -1 (below normal) or < -1.5 "
              "(severe). official_declaration = Andhra Pradesh G.O. drought mandal lists "
              "(data/official/; Karnataka not checked).", "",
              to_md(ds, index=False), "",
+             "## A2. Rabi seasons (December - March)", "",
+             "Rain = Oct-Dec (North-East monsoon) total vs 1979-2011 normal. Field share: rainfed sampled fields "
+             "with mean Dec-Feb SVI < -1. official_declaration = AP rabi drought G.O.s (2023-24: G.O.Ms.7 of "
+             "2024; 2024-25: G.O.Ms.3 of 2025; 2025-26: G.O.Ms.1 of 2026).", "",
+             to_md(dr.drop(columns=["season", "year"]), index=False), "",
              "## B. Irrigation label check", "",
              "Drought SVI = mean SVI in Aug-Nov of 2023 and 2026. A real irrigated field should stay "
              "above its site's rainfed median. Doubtful = as low as the rainfed median AND as "

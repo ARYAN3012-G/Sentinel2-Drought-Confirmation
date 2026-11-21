@@ -67,12 +67,13 @@ def lag_correlation(f: pd.DataFrame, w: pd.DataFrame) -> tuple[pd.DataFrame, pd.
     return corr, best
 
 
-def frozen_lag(f: pd.DataFrame, w: pd.DataFrame, n_boot: int = 500) -> tuple[pd.DataFrame, str]:
+def frozen_lag(f: pd.DataFrame, w: pd.DataFrame, n_boot: int = 500, months=None) -> tuple[pd.DataFrame, str]:
     """Choose the SPEI scale and lag on the TRAINING years only (median rho over sites, per
     irrigation class), then measure that choice on 2024-2026 - so the reported link is not the
     best of 57 tries on the same data. CI of the rainfed - irrigated difference: bootstrap over
     site x year blocks (pooled Spearman rho per class)."""
-    d = f[f["date"].dt.month.isin(C.CROP_SEASON_MONTHS) & f["SVI"].notna()]
+    months = C.CROP_SEASON_MONTHS if months is None else months
+    d = f[f["date"].dt.month.isin(months) & f["SVI"].notna()]
     d = add_lagged_spei(d[["field_id", "site_code", "irrigated", "weather", "date", "SVI"]], w)
     tr = d[d["date"].dt.year.isin(C.TRAIN_YEARS)]
     te = d[~d["date"].dt.year.isin(C.TRAIN_YEARS)]
@@ -123,7 +124,8 @@ def site_rainfed_vci(f: pd.DataFrame, z: pd.DataFrame | None) -> dict[str, pd.Da
     return out
 
 
-def confirmation(svci: pd.DataFrame, w: pd.DataFrame) -> pd.DataFrame:
+def confirmation(svci: pd.DataFrame, w: pd.DataFrame, months=None) -> pd.DataFrame:
+    months = C.CROP_SEASON_MONTHS if months is None else months
     steps_reset = C.ALARM_RESET_DAYS // C.STEP_DAYS
     steps_win = C.CONFIRM_WINDOW_DAYS // C.STEP_DAYS
     rows = []
@@ -134,7 +136,7 @@ def confirmation(svci: pd.DataFrame, w: pd.DataFrame) -> pd.DataFrame:
         spei30 = wx.reindex(dates).to_numpy()
         stress = (g["SVI"] < C.STRESS_Z).to_numpy()
         labelled = g["SVI"].notna().to_numpy()
-        season = np.isin(dates.month, C.CROP_SEASON_MONTHS)
+        season = np.isin(dates.month, months)
 
         def followed(i):
             j = slice(i + 1, i + 1 + steps_win)
@@ -175,6 +177,14 @@ def seasonal(svci: pd.DataFrame) -> pd.DataFrame:
     s = svci[svci["date"].dt.month.isin([8, 9, 10, 11])].copy()
     s["year"] = s["date"].dt.year
     return s.pivot_table(index="site_code", columns="year", values="SVI", aggfunc="mean").round(2)
+
+
+def seasonal_rabi(svci: pd.DataFrame) -> pd.DataFrame:
+    """Mean Dec-Mar SVI per rabi season (labelled by its start year: 2023 = Dec 2023 - Mar 2024)."""
+    s = svci[svci["date"].dt.month.isin(C.RABI_MONTHS)].copy()
+    s["rabi"] = np.where(s["date"].dt.month == 12, s["date"].dt.year, s["date"].dt.year - 1)
+    s["rabi"] = s["rabi"].astype(str) + "-" + (s["rabi"] + 1).astype(str).str[2:]
+    return s.pivot_table(index="site_code", columns="rabi", values="SVI", aggfunc="mean").round(2)
 
 
 def main():
@@ -219,10 +229,28 @@ def main():
              to_md(pd.DataFrame(labelled)), ""]
     for k, c in conf.items():
         lines += [f"### Source: {k}", "", to_md(c.drop(columns=["alarm_dates"]), index=False), ""]
+    # ---- rabi (Dec-Mar): same analyses, separately
+    fl_r, fl_r_note = frozen_lag(f, w, months=C.RABI_MONTHS)
+    fl_r.to_csv(OUT / "frozen_lag_rabi.csv", index=False)
+    conf_r = {k: confirmation(v, w, C.RABI_MONTHS) for k, v in sources.items()}
+    pd.concat([c.assign(source=k) for k, c in conf_r.items()]).to_csv(OUT / "confirmation_rabi.csv", index=False)
+    seas_r = seasonal_rabi(sources["median of sampled fields"])
+    seas_r.to_csv(OUT / "seasonal_svi_rabi.csv")
     lines += ["## C. Mean Aug-Nov SVI of rainfed farmland per year (negative = worse than normal)", "",
               "Compare with official drought declarations (data/official/drought_declarations.csv).", ""]
     for k, sd in seas.items():
         lines += [f"### Source: {k}", "", to_md(sd), ""]
+    lines += ["## D. Rabi season (December - March): the same analyses", "",
+              "Rabi = North-East monsoon / post-kharif season of the AP rabi drought orders. Rainfed fields often "
+              "carry no crop or a short residual-moisture crop then, so their normal greenness is low and "
+              "departures are small.", "",
+              "### Frozen choice (rabi months; chosen on 2019-2023, tested on 2024-2026)", "",
+              to_md(fl_r, index=False), "", fl_r_note, "",
+              "### Weather alarm followed by crop stress (alarms in Dec-Mar)", ""]
+    for k, c in conf_r.items():
+        lines += [f"#### Source: {k}", "", to_md(c.drop(columns=["alarm_dates"]), index=False), ""]
+    lines += ["### Mean Dec-Mar SVI of rainfed farmland per rabi season (median of sampled fields)", "",
+              to_md(seas_r), ""]
     (OUT / "LAG_REPORT.md").write_text("\n".join(lines), encoding="utf-8")
     print(f"Wrote {OUT / 'LAG_REPORT.md'}")
 
