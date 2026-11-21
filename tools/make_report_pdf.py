@@ -200,7 +200,7 @@ def build():
            Spacer(1, 1.2 * cm)]
     meta = Table([[P("<b>Project</b>", "cell"), P("DeepDroughtUAV: drought-area estimation in the Anantapur cluster", "cell")],
                   [P("<b>Prepared by</b>", "cell"), P("Aryan Rajesh Gadam", "cell")],
-                  [P("<b>Date</b>", "cell"), P("12 November 2026", "cell")],
+                  [P("<b>Date</b>", "cell"), P("21 November 2026", "cell")],
                   [P("<b>Study area</b>", "cell"), P("8 farming areas in Sri Sathya Sai and Kurnool (Andhra Pradesh) and Tumakuru (Karnataka)", "cell")],
                   [P("<b>Code and data</b>", "cell"), P("github.com/ARYAN3012-G/weather_time_series<br/>github.com/ARYAN3012-G/Sentinel2-Drought-Confirmation", "cell")]],
                  colWidths=[0.27 * FRAME_W, 0.73 * FRAME_W], hAlign="CENTER")
@@ -225,8 +225,12 @@ def build():
                    "<b>Early warning:</b> fields about to fall below normal within 15 days are ranked at ROC-AUC 0.76, "
                    "+0.02 to +0.07 over a fair statistical baseline.",
                    "<b>Operational replay:</b> severe 9/9 confirmed eventually, 5/9 before the government order (median "
-                   "lead 7 days); each decision counted once: 6/6 severe mandal-seasons, 5 before the order; "
-                   "10/11 undeclared seasons quiet (prospective 2024-2026: 10/10). 2026 is partial (data to 24 Oct).",
+                   "lead 7 days); each decision counted once: 6/6 severe kharif mandal-seasons (2 retrospective 2023, "
+                   "4 prospective 2026), 5 before the order, all on in-season images; both prospective moderate cases "
+                   "(2025) missed. 2026 is partial (data to 24 Oct).",
+                   "<b>Rabi (Dec-Mar):</b> 0 of 4 severe rabi mandal-seasons confirmed on in-season images; the only "
+                   "confirmation was carry-over of kharif stress. A rainfed rule is registered for a prospective test "
+                   "on rabi 2026-27.",
                    "<b>Honest negatives:</b> weather adds no significant skill to crop forecasts beyond satellite history; "
                    "single-date agreement with UAV verdicts is weak (3 of 10 fields clear, 2 mixed)."]),
            Spacer(1, 8),
@@ -305,7 +309,7 @@ def build():
                   ["Rainfed", "SPEI-30, 10-day lag", "0.48", "0.45 (0.16-0.58)"],
                   ["Irrigated", "SPEI-60, 15-day lag", "0.24", "0.29 (0.12-0.46)"]],
                  [0.22, 0.30, 0.18, 0.30]),
-           P("Table 4. Spearman correlation of crop SVI with SPEI. Rainfed minus irrigated on 2024-2026: [-0.02, +0.24].", "cap"),
+           P("Table 4. Spearman correlation of crop SVI with SPEI. Rainfed minus irrigated on 2024-2026: [-0.00, +0.23] (bootstrap over whole-season x weather-cell blocks).", "cap"),
            P("Weather alarms (SPEI-30 below -1) were followed by rainfed crop stress within 60 days in 22 of 44 cases, "
              "clearly above the base rate at Balaji Villas, Dinnedevarapadu and Cholasamudram.")]
 
@@ -351,6 +355,7 @@ def build():
                  [0.24, 0.19, 0.19, 0.19, 0.19]),
            P("Table 7. Agreement, counted per site-season and per mandal-season (each official decision once; "
              "Lepakshi and Cholasamudram share a mandal and weather cell, as do Balaji Villas and Pullaiah). "
+             "Kharif seasons. Every kharif confirmation rests on images taken inside the season. "
              "Thresholds -0.75 / -1.25 leave the false-alarm count unchanged.", "cap")]
 
     # ---------------- 9 mismatches
@@ -378,22 +383,59 @@ def build():
            P("Table 9. Comparison with common practice. The Marusov et al. comparison is a Marusov-inspired protocol, "
              "not a claim of beating their monthly PDSI results.", "cap")]
 
-    # ---------------- 11 limitations
-    st += [PageBreak(), P("11. Limitations", "h1")]
+    # ---------------- 11 rabi
+    st += [PageBreak(), P("11. Additional analysis: rabi season (December-March)", "h1"),
+           P("After correcting image freshness and separating carry-over from in-season evidence, the system confirmed "
+             "none of the four severe rabi mandal-seasons using in-season satellite images. Kharif remains the main "
+             "result; rabi is reported as a documented limitation."),
+           P("Same replay rules, issue dates 1 December - 31 March, against the AP rabi orders G.O. Ms 7 (16 March "
+             "2024), Ms 3 (31 March 2025) and Ms 1 (31 March 2026). The four severe cases are two mandals (Kurnool "
+             "Rural, Kurnool Urban) in two seasons (2023-24, 2024-25). A confirmation is <b>in-season</b> only if "
+             "every image behind it was taken inside the season.", "intro"),
+           table([["Evidence (mandal-seasons)", "Severe declared (n = 4)", "Not declared (n = 10)"],
+                  ["Replay confirmation, any images", "1 (Kurnool Rural 2023-24, carry-over)", "0"],
+                  ["Replay confirmation, in-season images only", "0", "0"],
+                  ["Vegetation activity < 75% of normal, all fields (retrospective)", "1 (Kurnool Rural 2024-25)", "0"],
+                  ["Irrigated-field SVI < -1, Dec-Feb (retrospective)", "0", "0"]],
+                 [0.46, 0.32, 0.22]),
+           P("Table 10. Rabi agreement with the official orders. Retrospective rows use the whole season's series and "
+             "are end-of-season diagnostics, not early warnings.", "cap")]
+    st += bullets(["<b>Carry-over.</b> Kurnool Rural was confirmed on 6 December 2023 as 'drought continuing' "
+                   "(SPEI-90 -1.26, SPEI-30 -0.25, no forecast alarm) from images of 9-29 November 2023: continuing "
+                   "kharif stress, not stress in rabi crops.",
+                   "<b>Weak link.</b> Chosen on rabi 2019-20 to 2023-24 and tested on 2024-25 and 2025-26 (whole "
+                   "seasons), the rainfed SPEI-SVI correlation falls from ρ 0.25 to 0.05.",
+                   "<b>Interpretation.</b> Seasonal cropping patterns may limit the transfer of the kharif approach to "
+                   "rabi, but this is unverified. 83% of rainfed fields are active over December-March but 29% over "
+                   "January-March only, consistent with late kharif crops dominating December greenness; this does not "
+                   "identify crop type.",
+                   "<b>False alarms.</b> None in ten undeclared cases; this small sample does not establish a low "
+                   "false-alarm rate (approximate 95% upper bound 31%).",
+                   "<b>Registered test, rabi 2026-27.</b> A rainfed-only activity rule was registered on 21 November "
+                   "2026, before the season (docs/PREREGISTRATION_rabi_2026-27.md, git-dated): R1 at the end of the "
+                   "season, R2 as an early warning on 15 February 2027 using only data available then; flag below 75% "
+                   "of the 2019-20 to 2022-23 normal, scored per mandal. On 2023-24 to 2025-26 it would have flagged "
+                   "2/4 (R1) and 3/4 (R2) severe cases and 0/10 undeclared ones, but it was written after seeing those "
+                   "seasons, so these figures describe the rule and are not evidence."])
+
+    # ---------------- 12 limitations
+    st += [PageBreak(), P("12. Limitations", "h1")]
     st += bullets(["Short satellite record: normals rest on five years; the test years hold one drought season (2026, data to 24 October); 2023 results are retrospective because field selection used 2019-2023 imagery.",
                    "Few events: 3-7 alarms per site and 10 distinct declared mandal-seasons; agreement figures are case evidence.",
                    "Monsoon clouds often leave fewer than 5 clear fields in August-September, delaying confirmation.",
                    "SVI classes are index categories, not measured damage; irrigation is inferred from dry-season greenness.",
                    "Spatial mismatch between mandals, 3 km areas and single fields; for Sira only 2023 is confirmed by name.",
                    "AgERA5 is about a week late, so 7-day forecasts give little real warning; 15 days gives about a week.",
-                   "No skill beyond persistence at 30 days; UAV comparison uses post-harvest flights and no field boundaries."])
+                   "No skill beyond persistence at 30 days; UAV comparison uses post-harvest flights and no field boundaries.",
+                   "Rabi: no severe rabi case confirmed on in-season images (0/4); the explanation is a hypothesis under a registered test.",
+                   "Site-to-mandal assignment uses the site centre, not a polygon overlay with official mandal boundaries."])
 
     # ---------------- 12 references
-    st += [P("12. References", "h1")]
+    st += [P("13. References", "h1")]
     refs = ["Achanta, R. & Süsstrunk, S. (2017). Superpixels and polygons using simple non-iterative clustering. CVPR.",
             "Boogaard, H. et al. AgERA5: agrometeorological indicators from 1979 to present. Copernicus Climate Change Service.",
             "Brown, C. F. et al. (2022). Dynamic World, near real-time global 10 m land cover mapping. Scientific Data 9, 251.",
-            "Government of Andhra Pradesh, Revenue (DM) Dept. G.O.Ms. 4 (2023), 15 (2024), 6 (2025), 4 and 5 (2026).",
+            "Government of Andhra Pradesh, Revenue (DM) Dept. G.O.Ms. 4 (2023), 15 (2024), 6 (2025), 4 and 5 (2026) (kharif); 7 (2024), 3 (2025), 1 (2026) (rabi).",
             "Government of India (2016). Manual for Drought Management. Ministry of Agriculture and Farmers Welfare.",
             "Kogan, F. N. (1995). Vegetation index and brightness temperature for drought detection. Adv. Space Res. 15(11).",
             "Marusov, A., Grabar, V., Maximov, Y. et al. (2024). Long-term drought prediction using deep neural networks based on geospatial weather data. Environ. Model. Softw. 179; arXiv:2309.06212.",
