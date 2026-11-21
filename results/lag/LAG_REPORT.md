@@ -38,14 +38,14 @@ Crop-season steps (Jul-Nov) with a label. Positive rho = wetter weather, healthi
 | Som | 0 | 30 | 75 | 0.5750 | 812 |
 | Som | 1 | 60 | 50 | 0.3030 | 423 |
 
-### Frozen choice: scale and lag chosen on 2019-2023, tested on 2024-2026
+### Frozen choice: scale and lag chosen on the 2019-2023 seasons, tested on 2024-2026
 
-| irrigated | chosen_on | spei_scale | lag_days | rho_train_median | rho_test_median | rho_test_min | rho_test_max |
-|---|---|---|---|---|---|---|---|
-| 0 | 2019-2023 | 30 | 10 | 0.4790 | 0.4460 | 0.1600 | 0.5820 |
-| 1 | 2019-2023 | 60 | 15 | 0.2390 | 0.2940 | 0.1170 | 0.4560 |
+| irrigated | chosen_on | tested_on | spei_scale | lag_days | rho_train_median | rho_test_median | rho_test_min | rho_test_max |
+|---|---|---|---|---|---|---|---|---|
+| 0 | 2019 .. 2023 | 2024 .. 2026 | 30 | 10 | 0.4790 | 0.4460 | 0.1600 | 0.5820 |
+| 1 | 2019 .. 2023 | 2024 .. 2026 | 60 | 15 | 0.2390 | 0.2940 | 0.1170 | 0.4560 |
 
-Rainfed minus irrigated pooled rho on 2024-2026 (frozen choices): 95% CI [-0.02, +0.24] (500 bootstrap samples of site x year blocks).
+Rainfed minus irrigated pooled rho on seasons 2024 .. 2026 (frozen choices): 95% CI [-0.00, +0.23] (500 bootstrap samples of whole-season x weather-cell blocks, 18 blocks).
 
 ## B. Does a weather alarm predict satellite-confirmed stress?
 
@@ -122,18 +122,20 @@ Compare with official drought declarations (data/official/drought_declarations.c
 
 ## D. Rabi season (December - March): the same analyses
 
-Rabi = North-East monsoon / post-kharif season of the AP rabi drought orders. Rainfed fields often carry no crop or a short residual-moisture crop then, so their normal greenness is low and departures are small.
+Rabi = North-East monsoon / post-kharif season of the AP rabi drought orders. Whole seasons are kept together (Dec y - Mar y+1 = season y); rabi 2018-19 is dropped (data start in January 2019). Training seasons 2019-20 .. 2023-24, test seasons 2024-25 and 2025-26. Why the rabi link is weak is a hypothesis (fewer cropped rainfed fields after December; December greenness dominated by late kharif crops), not a tested result.
 
-### Frozen choice (rabi months; chosen on 2019-2023, tested on 2024-2026)
+### Frozen choice (rabi months, whole seasons)
 
-| irrigated | chosen_on | spei_scale | lag_days | rho_train_median | rho_test_median | rho_test_min | rho_test_max |
-|---|---|---|---|---|---|---|---|
-| 0 | 2019-2023 | 60 | 5 | 0.3840 | 0.1100 | -0.0150 | 0.3450 |
-| 1 | 2019-2023 | 60 | 10 | 0.1590 | 0.0240 | -0.0840 | 0.1990 |
+| irrigated | chosen_on | tested_on | spei_scale | lag_days | rho_train_median | rho_test_median | rho_test_min | rho_test_max |
+|---|---|---|---|---|---|---|---|---|
+| 0 | 2019-20 .. 2023-24 | 2024-25 .. 2025-26 | 60 | 5 | 0.2530 | 0.0490 | -0.0330 | 0.3920 |
+| 1 | 2019-20 .. 2023-24 | 2024-25 .. 2025-26 | 30 | 35 | 0.0570 | 0.0820 | -0.0200 | 0.1740 |
 
-Rainfed minus irrigated pooled rho on 2024-2026 (frozen choices): 95% CI [+0.05, +0.17] (500 bootstrap samples of site x year blocks).
+Rainfed minus irrigated pooled rho on seasons 2024-25 .. 2025-26 (frozen choices): 95% CI [-0.01, +0.10] (500 bootstrap samples of whole-season x weather-cell blocks, 12 blocks).
 
 ### Weather alarm followed by crop stress (alarms in Dec-Mar)
+
+Alarms are issued in Dec-Mar; the 60-day follow-up of a February or March alarm can extend into April-May, so a confirmation is not restricted to rabi months.
 
 #### Source: median of sampled fields
 
@@ -163,13 +165,13 @@ Rainfed minus irrigated pooled rho on 2024-2026 (frozen choices): 95% CI [+0.05,
 
 ### Mean Dec-Mar SVI of rainfed farmland per rabi season (median of sampled fields)
 
-| site_code | 2018-19 | 2019-20 | 2020-21 | 2021-22 | 2022-23 | 2023-24 | 2024-25 | 2025-26 |
-|---|---|---|---|---|---|---|---|---|
-| Bal | -1.1500 | 0.0200 | 0.5800 | -0.0400 | -0.1800 | -0.5900 | -0.1900 | 0.1500 |
-| Cho | -1.7700 | -0.3800 | -0.0100 | 0.5900 | 0.1700 | -0.4400 | 0.7000 | -0.2000 |
-| Din | -0.9100 | -0.4400 | 0.2100 | 0.2300 | 0.0400 | -0.6600 | -0.1000 | 0.5300 |
-| Lep | -1.7500 | -0.3100 | 0.2000 | 0.4200 | 0.2100 | -0.4200 | 0.2300 | -0.2600 |
-| Ped | -1.0300 | -0.2800 | 0.1000 | -0.0100 | 0.6600 | -0.4400 | -0.1500 | 0.2700 |
-| Pul | -0.2300 | -0.1800 | -0.2500 | 0.3100 | -0.4300 | -0.3900 | 0.0000 | -0.2100 |
-| Sira | -1.3500 | -0.2900 | -0.0100 | 0.7300 | 0.3900 | -0.3900 | 0.6200 | 0.1000 |
-| Som | -2.6800 | -0.5900 | 0.6400 | 0.6000 | 0.2800 | -0.1500 | 0.5600 | -0.0600 |
+| site_code | 2019-20 | 2020-21 | 2021-22 | 2022-23 | 2023-24 | 2024-25 | 2025-26 |
+|---|---|---|---|---|---|---|---|
+| Bal | 0.0200 | 0.5800 | -0.0400 | -0.1800 | -0.5900 | -0.1900 | 0.1500 |
+| Cho | -0.3800 | -0.0100 | 0.5900 | 0.1700 | -0.4400 | 0.7000 | -0.2000 |
+| Din | -0.4400 | 0.2100 | 0.2300 | 0.0400 | -0.6600 | -0.1000 | 0.5300 |
+| Lep | -0.3100 | 0.2000 | 0.4200 | 0.2100 | -0.4200 | 0.2300 | -0.2600 |
+| Ped | -0.2800 | 0.1000 | -0.0100 | 0.6600 | -0.4400 | -0.1500 | 0.2700 |
+| Pul | -0.1800 | -0.2500 | 0.3100 | -0.4300 | -0.3900 | 0.0000 | -0.2100 |
+| Sira | -0.2900 | -0.0100 | 0.7300 | 0.3900 | -0.3900 | 0.6200 | 0.1000 |
+| Som | -0.5900 | 0.6400 | 0.6000 | 0.2800 | -0.1500 | 0.5600 | -0.0600 |

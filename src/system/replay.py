@@ -13,7 +13,10 @@ On each issue date d (every 5 days):
   weather  : AgERA5 arrives ~WEATHER_DELAY_DAYS late -> SPEI-30/90 of day d - delay (not older than
              5 days) and the weather module's +15-day forecast issued that day
   satellite: Sentinel-2 images up to d - SAT_DELAY_DAYS (median SVI of the rainfed sampled fields,
-             images at most 30 days old, at least MIN_SAT_FIELDS fields)
+             each field's latest image at most 30 days old ON THE ISSUE DATE, >= MIN_SAT_FIELDS fields)
+  evidence : the dates of the weather and satellite data behind each status are saved. A confirmation
+             is IN-SEASON if every image used was taken inside the evaluated season, otherwise it rests
+             (partly) on images from before the season (CARRY-OVER of earlier stress). Both are reported.
   status   : same rules as run_system.py (alarm / confirmed / continuing / insufficient data)
 No crop model is used. Seasons whose months overlap the field-selection period 2019-2023 (kharif
 2023, rabi 2023-24) are RETROSPECTIVE; later seasons are PROSPECTIVE.
@@ -74,7 +77,8 @@ def daily(seasons, stress_z: float = C.STRESS_Z) -> pd.DataFrame:
     w = pd.read_csv(C.CLEAN_DIR / "weather_5day.csv", parse_dates=["date"])
     fc = pd.read_csv(C.CLEAN_DIR / "weather_forecasts.csv", parse_dates=["date"])
     fc = fc[fc.h == H]
-    rain = f[(f.irrigated == 0) & f.SVI_c.notna() & (f.age_c <= C.MAX_INPUT_AGE)]
+    rain = f[(f.irrigated == 0) & f.SVI_c.notna()].copy()
+    rain["image_date"] = rain.date - pd.to_timedelta(rain.age_c, unit="D")
     last = data_end(w, f)
     rows = []
     for kind, y in seasons:
@@ -92,20 +96,32 @@ def daily(seasons, stress_z: float = C.STRESS_Z) -> pd.DataFrame:
                 ff = fc[(fc.weather == wx) & (fc.date <= dw) & (fc.date > dw - pd.Timedelta(days=5))].tail(1)
                 sat = rain[(rain.site_code == code) & (rain.date <= ds)]
                 sat = sat[sat.date == sat.date.max()] if len(sat) else sat
-                sat = sat[(ds - sat.date).dt.days <= C.STEP_DAYS]
+                sat = sat[((ds - sat.date).dt.days <= C.STEP_DAYS)
+                          & ((d - sat.image_date).dt.days <= C.MAX_INPUT_AGE)]     # age on the issue date
                 spei30, spei90 = float(ww.SPEI30.iloc[0]), float(ww.SPEI90.iloc[0])
                 severe_fc = bool(len(ff) and ff[["p_healthy", "p_moderate", "p_severe"]].to_numpy()[0].argmax() == 2)
                 alarm = spei30 < C.ALARM_SPEI or severe_fc
                 ok = len(sat) >= MIN_SAT_FIELDS
                 med = float(sat.SVI_c.median()) if len(sat) else np.nan
                 conf = ok and med < stress_z
+                img0 = sat.image_date.min() if len(sat) else pd.NaT
+                img1 = sat.image_date.max() if len(sat) else pd.NaT
                 status = ("insufficient satellite data" if not ok else
                           "drought" if alarm and conf else
                           "drought continuing" if conf and spei90 < C.ALARM_SPEI else
                           "watch" if alarm else "crop stress, no alarm" if conf else "normal")
+                trig = [t for t, on in (("SPEI-30", spei30 < C.ALARM_SPEI), ("forecast", severe_fc)) if on]
+                if not alarm and conf and spei90 < C.ALARM_SPEI:
+                    trig = ["SPEI-90 (continuing)"]
                 rows.append(dict(kind=kind, year=y, season=label(kind, y), issue_date=d.date(), site=code,
-                                 SPEI30=round(spei30, 2), SPEI90=round(spei90, 2), severe_forecast=severe_fc,
-                                 alarm=alarm, rainfed_fields=len(sat), median_SVI=round(med, 2) if ok else np.nan,
+                                 weather_date=ww.date.iloc[0].date(), SPEI30=round(spei30, 2),
+                                 SPEI90=round(spei90, 2), severe_forecast=severe_fc, alarm=alarm,
+                                 trigger="+".join(trig), rainfed_fields=len(sat),
+                                 median_SVI=round(med, 2) if ok else np.nan,
+                                 images_from=img0.date() if len(sat) else None,
+                                 images_to=img1.date() if len(sat) else None,
+                                 max_image_age_at_issue=int((d - img0).days) if len(sat) else np.nan,
+                                 images_in_season=bool(len(sat) and img0 >= start),
                                  confirmed=conf, status=status))
     return pd.DataFrame(rows)
 
@@ -119,7 +135,9 @@ def seasons_table(dd: pd.DataFrame) -> pd.DataFrame:
     for (kind, y, s), g in dd.groupby(["kind", "year", "site"]):
         g = g.sort_values("issue_date")
         a = g[g.alarm].issue_date
-        c = g[g.status.isin(["drought", "drought continuing"])].issue_date
+        cg = g[g.status.isin(["drought", "drought continuing"])]
+        c = cg.issue_date
+        ci = cg[cg.images_in_season].issue_date                 # confirmed on in-season images only
         dec = gov[(gov.site_code == s) & (gov.year == y) & (gov.season == kind)]
         od = dec.order_date.iloc[0] if len(dec) and isinstance(dec.order_date.iloc[0], str) else ""
         go = pd.Timestamp(od if od else GO_DATES[(kind, y)]).date()
@@ -133,7 +151,11 @@ def seasons_table(dd: pd.DataFrame) -> pd.DataFrame:
                         partial_season=max(g.issue_date) < (end - pd.Timedelta(days=4)).date(),
                         official=st, official_level=level(st), GO_date=go,
                         first_alarm=a.min() if len(a) else None, first_confirmed=c.min() if len(c) else None,
-                        confirmed_dates=int(len(c)),
+                        first_confirmed_status=cg.status.iloc[0] if len(c) else None,
+                        first_confirmed_images=(f"{cg.images_from.iloc[0]} .. {cg.images_to.iloc[0]}"
+                                                if len(c) else None),
+                        first_confirmed_in_season=ci.min() if len(ci) else None,
+                        confirmed_dates=int(len(c)), confirmed_dates_in_season=int(len(ci)),
                         dates_with_satellite=int((g.status != "insufficient satellite data").sum()),
                         site_dates=int(len(g)),
                         confirmed_before_GO=bool(len(c) and c.min() <= go),
@@ -148,6 +170,7 @@ def counts(k: pd.DataFrame) -> dict:
         g = k[k.official_level == lev]
         out[f"{name}: confirmed (eventually)"] = f"{int((g.confirmed_dates > 0).sum())}/{len(g)}"
         out[f"{name}: before order"] = f"{int(g.confirmed_before_GO.sum())}/{len(g)}"
+        out[f"{name}: confirmed on in-season images"] = f"{int((g.confirmed_dates_in_season > 0).sum())}/{len(g)}"
     g = k[k.official_level == 0]
     out["not declared: confirmed (false alarm)"] = f"{int((g.confirmed_dates > 0).sum())}/{len(g)}"
     return out
@@ -161,11 +184,16 @@ def mandal_seasons(known: pd.DataFrame) -> pd.DataFrame:
             continue
         conf = g[g.confirmed_dates > 0]
         first = min(conf.first_confirmed) if len(conf) else None
+        fi = g.first_confirmed_in_season.dropna()
+        fs = conf.loc[conf.first_confirmed == first].iloc[0] if len(conf) else None
         go = g.GO_date.iloc[0]
         rows.append(dict(season=season, kind=g.kind.iloc[0], design=g.design.iloc[0], mandal=m,
                          sites=", ".join(g.site), official=g.official.iloc[0],
                          official_level=g.official_level.iloc[0], order_date=go, system_first_confirmed=first,
-                         confirmed_dates=int(first is not None),
+                         first_status=fs.first_confirmed_status if fs is not None else None,
+                         first_images=fs.first_confirmed_images if fs is not None else None,
+                         first_confirmed_in_season=min(fi) if len(fi) else None,
+                         confirmed_dates=int(first is not None), confirmed_dates_in_season=int(len(fi) > 0),
                          confirmed_before_GO=bool(first is not None and first <= go),
                          partial_season=bool(g.partial_season.any())))
     return pd.DataFrame(rows)
@@ -203,7 +231,14 @@ def main():
              f"Every 5 days; kharif = 1 Jun - 30 Nov, rabi = 1 Dec - 31 Mar; weather {WEATHER_DELAY_DAYS} days "
              f"late (AgERA5), satellite {SAT_DELAY_DAYS} days late; weather older than {C.STEP_DAYS} days is not "
              f"used. Alarm = SPEI-30 < {C.ALARM_SPEI} or a Severe +{H}-day forecast; confirmed = median rainfed "
-             f"SVI < {C.STRESS_Z:g} from >= {MIN_SAT_FIELDS} fields. No crop model is used.", "",
+             f"SVI < {C.STRESS_Z:g} from >= {MIN_SAT_FIELDS} fields, each field's latest image at most "
+             f"{C.MAX_INPUT_AGE} days old on the issue date. No crop model is used.", "",
+             "**Carry-over vs in-season.** A confirmation counts as *in-season* only if every image behind it was "
+             "taken inside the evaluated season. Early in a season (especially 1 December, the first rabi issue "
+             "date) the latest images still show the end of the previous season, so a confirmation then reports "
+             "CONTINUING earlier stress, not new stress in the season's own crops. Both counts are shown; "
+             "'drought continuing' (SVI low while SPEI-90 < -1) is carry-over of weather drought by construction.",
+             "",
              "**Data ends.** " + ("; ".join(f"{s}: partial, last issue date {d}" for s, d in partial.items())
                                   if len(partial) else "all seasons complete") + ".", "",
              "**Retrospective vs prospective.** The farmland mask, field segments and irrigation flag were derived "
@@ -214,8 +249,8 @@ def main():
              "run_system.py before this replay was written; they were not tuned on it.", "",
              "**Satellite coverage** (share of site-dates with at least 5 clear, labelled rainfed fields): "
              + ", ".join(f"{k} {v:.0%}" for k, v in cover.items())
-             + ". Rabi skies are clear, but rainfed fields then carry little or no crop, so their normal "
-             "greenness is low and drought departures are small.", "",
+             + ". A possible reason for the weak rabi response (a hypothesis, not tested here): fewer rainfed "
+             "fields carry a crop after December, and December greenness is dominated by late kharif crops.", "",
              "## Each official decision counted once (mandal x season)", "",
              "Lepakshi and Cholasamudram lie in Lepakshi mandal and share one weather cell; Balaji Villas and "
              "Pullaiah lie in Kurnool Urban and share one weather cell. Each mandal-season is one event (confirmed if "
@@ -228,7 +263,11 @@ def main():
              "## Mandal x season detail", "",
              to_md(md.drop(columns=["official_level", "confirmed_dates"]), index=False), "",
              "## Season summary per site", "", to_md(ss, index=False), "",
-             "Small sample (one area per mandal): read as case evidence, not a statistical test.", ""]
+             "Small sample (one area per mandal; declarations are administrative decisions, not field-level "
+             "ground truth): read as case evidence, not a statistical test. '0/10 false alarms' means no flag in "
+             "ten undeclared cases; with so few, spatially related cases the true rate could still be about 30% "
+             "(approximate 95% upper bound for 0/10). Site-to-mandal assignment uses the site centre, not a "
+             "polygon overlay with official mandal boundaries.", ""]
     sens = []
     for z in [C.STRESS_Z] + list(a.sensitivity):
         k = known if z == C.STRESS_Z else seasons_table(daily(SEASONS, z)).pipe(lambda t: t[t.official_level.notna()])

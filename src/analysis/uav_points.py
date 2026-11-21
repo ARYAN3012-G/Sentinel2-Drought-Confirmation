@@ -24,7 +24,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import config as C  # noqa: E402
-from dataprep.build_dataset import INDICES, clean_observations, to_5day  # noqa: E402
+from dataprep.build_dataset import INDICES, clean_observations, frozen_full_px, to_5day  # noqa: E402
 
 to_md = C.weather_module("utils/report.py").to_md
 OUT = C.RESULTS_DIR / "uav"
@@ -34,7 +34,7 @@ def satellite_series() -> pd.DataFrame:
     raw = pd.read_csv(C.UAV_TS_FILE)
     raw = raw.rename(columns=lambda c: c[:-5] if c.endswith("_mean") else c)
     raw["date"] = pd.to_datetime(raw["date"])
-    raw["full_px"] = raw.groupby("field_id")["NDVI_count"].transform("max")
+    raw["full_px"] = frozen_full_px(raw, "field_id", "NDVI_count")
     obs, _ = clean_observations(raw, "field_id", "NDVI_count", "full_px", C.MIN_CLEAR_FRAC_FIELD, INDICES)
     static = raw.groupby("field_id")[["site_code"]].first().reset_index()
     return to_5day(obs, "field_id", static, INDICES)

@@ -1,33 +1,33 @@
-season,kind,design,mandal,sites,official,official_level,order_date,system_first_confirmed,confirmed_dates,confirmed_before_GO,partial_season
-kharif 2023,kharif,retrospective,Kurnool Urban,"Bal, Pul",Severe,2.0,2023-10-31,2023-10-29,1,True,False
-kharif 2023,kharif,retrospective,Lepakshi,"Cho, Lep",Moderate,1.0,2023-10-31,2023-10-19,1,True,False
-kharif 2023,kharif,retrospective,Kurnool Rural,Din,Not declared,0.0,2023-10-31,2023-09-04,1,True,False
-kharif 2023,kharif,retrospective,Sira taluk,Sira,Severe,2.0,2023-09-14,2023-09-09,1,True,False
-kharif 2023,kharif,retrospective,Somandepalle,Som,Moderate,1.0,2023-10-31,2023-10-29,1,True,False
-kharif 2024,kharif,prospective,Kurnool Urban,"Bal, Pul",Not declared,0.0,2024-10-29,,0,False,False
-kharif 2024,kharif,prospective,Lepakshi,"Cho, Lep",Not declared,0.0,2024-10-29,,0,False,False
-kharif 2024,kharif,prospective,Kurnool Rural,Din,Not declared,0.0,2024-10-29,,0,False,False
-kharif 2024,kharif,prospective,Somandepalle,Som,Not declared,0.0,2024-10-29,,0,False,False
-kharif 2025,kharif,prospective,Kurnool Urban,"Bal, Pul",Not declared,0.0,2025-10-31,,0,False,False
-kharif 2025,kharif,prospective,Lepakshi,"Cho, Lep",Moderate,1.0,2025-10-31,,0,False,False
-kharif 2025,kharif,prospective,Kurnool Rural,Din,Not declared,0.0,2025-10-31,,0,False,False
-kharif 2025,kharif,prospective,Adoni (border with Peddakadubur),Ped,Not declared,0.0,2025-10-31,,0,False,False
-kharif 2025,kharif,prospective,Somandepalle,Som,Moderate,1.0,2025-10-31,,0,False,False
-kharif 2026,kharif,prospective,Kurnool Urban,"Bal, Pul",Severe,2.0,2026-10-01,2026-09-09,1,True,True
-kharif 2026,kharif,prospective,Lepakshi,"Cho, Lep",Severe,2.0,2026-10-01,2026-09-24,1,True,True
-kharif 2026,kharif,prospective,Kurnool Rural,Din,Severe,2.0,2026-10-01,2026-09-09,1,True,True
-kharif 2026,kharif,prospective,Somandepalle,Som,Severe,2.0,2026-10-01,2026-10-14,1,False,True
-rabi 2023-24,rabi,retrospective,Kurnool Urban,"Bal, Pul",Severe,2.0,2024-03-16,,0,False,False
-rabi 2023-24,rabi,retrospective,Lepakshi,"Cho, Lep",Not declared,0.0,2024-03-16,,0,False,False
-rabi 2023-24,rabi,retrospective,Kurnool Rural,Din,Severe,2.0,2024-03-16,2023-12-01,1,True,False
-rabi 2023-24,rabi,retrospective,Somandepalle,Som,Not declared,0.0,2024-03-16,,0,False,False
-rabi 2024-25,rabi,prospective,Kurnool Urban,"Bal, Pul",Severe,2.0,2025-03-31,,0,False,False
-rabi 2024-25,rabi,prospective,Lepakshi,"Cho, Lep",Not declared,0.0,2025-03-31,,0,False,False
-rabi 2024-25,rabi,prospective,Kurnool Rural,Din,Severe,2.0,2025-03-31,,0,False,False
-rabi 2024-25,rabi,prospective,Adoni (border with Peddakadubur),Ped,Not declared,0.0,2025-03-31,,0,False,False
-rabi 2024-25,rabi,prospective,Somandepalle,Som,Not declared,0.0,2025-03-31,,0,False,False
-rabi 2025-26,rabi,prospective,Kurnool Urban,"Bal, Pul",Not declared,0.0,2026-03-31,,0,False,False
-rabi 2025-26,rabi,prospective,Lepakshi,"Cho, Lep",Not declared,0.0,2026-03-31,,0,False,False
-rabi 2025-26,rabi,prospective,Kurnool Rural,Din,Not declared,0.0,2026-03-31,,0,False,False
-rabi 2025-26,rabi,prospective,Adoni (border with Peddakadubur),Ped,Not declared,0.0,2026-03-31,,0,False,False
-rabi 2025-26,rabi,prospective,Somandepalle,Som,Not declared,0.0,2026-03-31,,0,False,False
+season,kind,design,mandal,sites,official,official_level,order_date,system_first_confirmed,first_status,first_images,first_confirmed_in_season,confirmed_dates,confirmed_dates_in_season,confirmed_before_GO,partial_season
+kharif 2023,kharif,retrospective,Kurnool Urban,"Bal, Pul",Severe,2.0,2023-10-31,2023-10-29,drought,2023-10-25 .. 2023-10-25,2023-10-29,1,1,True,False
+kharif 2023,kharif,retrospective,Lepakshi,"Cho, Lep",Moderate,1.0,2023-10-31,2023-10-19,drought,2023-10-15 .. 2023-10-15,2023-10-19,1,1,True,False
+kharif 2023,kharif,retrospective,Kurnool Rural,Din,Not declared,0.0,2023-10-31,2023-09-04,drought,2023-08-31 .. 2023-08-31,2023-09-04,1,1,True,False
+kharif 2023,kharif,retrospective,Sira taluk,Sira,Severe,2.0,2023-09-14,2023-09-09,drought,2023-08-16 .. 2023-08-31,2023-09-09,1,1,True,False
+kharif 2023,kharif,retrospective,Somandepalle,Som,Moderate,1.0,2023-10-31,2023-10-29,drought,2023-10-25 .. 2023-10-25,2023-10-29,1,1,True,False
+kharif 2024,kharif,prospective,Kurnool Urban,"Bal, Pul",Not declared,0.0,2024-10-29,,,,,0,0,False,False
+kharif 2024,kharif,prospective,Lepakshi,"Cho, Lep",Not declared,0.0,2024-10-29,,,,,0,0,False,False
+kharif 2024,kharif,prospective,Kurnool Rural,Din,Not declared,0.0,2024-10-29,,,,,0,0,False,False
+kharif 2024,kharif,prospective,Somandepalle,Som,Not declared,0.0,2024-10-29,,,,,0,0,False,False
+kharif 2025,kharif,prospective,Kurnool Urban,"Bal, Pul",Not declared,0.0,2025-10-31,,,,,0,0,False,False
+kharif 2025,kharif,prospective,Lepakshi,"Cho, Lep",Moderate,1.0,2025-10-31,,,,,0,0,False,False
+kharif 2025,kharif,prospective,Kurnool Rural,Din,Not declared,0.0,2025-10-31,,,,,0,0,False,False
+kharif 2025,kharif,prospective,Adoni (border with Peddakadubur),Ped,Not declared,0.0,2025-10-31,,,,,0,0,False,False
+kharif 2025,kharif,prospective,Somandepalle,Som,Moderate,1.0,2025-10-31,,,,,0,0,False,False
+kharif 2026,kharif,prospective,Kurnool Urban,"Bal, Pul",Severe,2.0,2026-10-01,2026-09-09,drought,2026-09-06 .. 2026-09-06,2026-09-09,1,1,True,True
+kharif 2026,kharif,prospective,Lepakshi,"Cho, Lep",Severe,2.0,2026-10-01,2026-09-24,drought,2026-09-06 .. 2026-09-14,2026-09-24,1,1,True,True
+kharif 2026,kharif,prospective,Kurnool Rural,Din,Severe,2.0,2026-10-01,2026-09-09,drought,2026-09-06 .. 2026-09-06,2026-09-09,1,1,True,True
+kharif 2026,kharif,prospective,Somandepalle,Som,Severe,2.0,2026-10-01,2026-10-14,drought,2026-09-14 .. 2026-10-09,2026-10-14,1,1,False,True
+rabi 2023-24,rabi,retrospective,Kurnool Urban,"Bal, Pul",Severe,2.0,2024-03-16,,,,,0,0,False,False
+rabi 2023-24,rabi,retrospective,Lepakshi,"Cho, Lep",Not declared,0.0,2024-03-16,,,,,0,0,False,False
+rabi 2023-24,rabi,retrospective,Kurnool Rural,Din,Severe,2.0,2024-03-16,2023-12-06,drought continuing,2023-11-09 .. 2023-11-29,,1,0,True,False
+rabi 2023-24,rabi,retrospective,Somandepalle,Som,Not declared,0.0,2024-03-16,,,,,0,0,False,False
+rabi 2024-25,rabi,prospective,Kurnool Urban,"Bal, Pul",Severe,2.0,2025-03-31,,,,,0,0,False,False
+rabi 2024-25,rabi,prospective,Lepakshi,"Cho, Lep",Not declared,0.0,2025-03-31,,,,,0,0,False,False
+rabi 2024-25,rabi,prospective,Kurnool Rural,Din,Severe,2.0,2025-03-31,,,,,0,0,False,False
+rabi 2024-25,rabi,prospective,Adoni (border with Peddakadubur),Ped,Not declared,0.0,2025-03-31,,,,,0,0,False,False
+rabi 2024-25,rabi,prospective,Somandepalle,Som,Not declared,0.0,2025-03-31,,,,,0,0,False,False
+rabi 2025-26,rabi,prospective,Kurnool Urban,"Bal, Pul",Not declared,0.0,2026-03-31,,,,,0,0,False,False
+rabi 2025-26,rabi,prospective,Lepakshi,"Cho, Lep",Not declared,0.0,2026-03-31,,,,,0,0,False,False
+rabi 2025-26,rabi,prospective,Kurnool Rural,Din,Not declared,0.0,2026-03-31,,,,,0,0,False,False
+rabi 2025-26,rabi,prospective,Adoni (border with Peddakadubur),Ped,Not declared,0.0,2026-03-31,,,,,0,0,False,False
+rabi 2025-26,rabi,prospective,Somandepalle,Som,Not declared,0.0,2026-03-31,,,,,0,0,False,False

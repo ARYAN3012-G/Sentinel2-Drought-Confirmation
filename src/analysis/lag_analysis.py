@@ -67,16 +67,35 @@ def lag_correlation(f: pd.DataFrame, w: pd.DataFrame) -> tuple[pd.DataFrame, pd.
     return corr, best
 
 
+def season_year(dates: pd.Series, months) -> pd.Series:
+    """Season label = its start year. Seasons crossing the new year (rabi Dec-Mar): Jan-Mar belong to the
+    season that started the previous December, so a season is never split between train and test."""
+    cross = 12 in months and 1 in months
+    return dates.dt.year - ((dates.dt.month <= 6) & cross).astype(int)
+
+
+def complete_seasons(d: pd.DataFrame, months) -> pd.DataFrame:
+    """Drop seasons whose first month is missing from the data (e.g. rabi 2018-19: data start Jan 2019)."""
+    start = pd.to_datetime(d["season_year"].astype(str) + f"-{months[0]:02d}-01")
+    return d[start >= pd.Timestamp(C.GRID_START)]
+
+
 def frozen_lag(f: pd.DataFrame, w: pd.DataFrame, n_boot: int = 500, months=None) -> tuple[pd.DataFrame, str]:
     """Choose the SPEI scale and lag on the TRAINING years only (median rho over sites, per
     irrigation class), then measure that choice on 2024-2026 - so the reported link is not the
     best of 57 tries on the same data. CI of the rainfed - irrigated difference: bootstrap over
-    site x year blocks (pooled Spearman rho per class)."""
+    WHOLE-SEASON x weather-cell blocks (pooled Spearman rho per class): sites sharing a weather cell are
+    resampled together, and a rabi season (Dec-Mar) is never split across train/test or blocks."""
     months = C.CROP_SEASON_MONTHS if months is None else months
     d = f[f["date"].dt.month.isin(months) & f["SVI"].notna()]
     d = add_lagged_spei(d[["field_id", "site_code", "irrigated", "weather", "date", "SVI"]], w)
-    tr = d[d["date"].dt.year.isin(C.TRAIN_YEARS)]
-    te = d[~d["date"].dt.year.isin(C.TRAIN_YEARS)]
+    d = d.assign(season_year=season_year(d["date"], months))
+    d = complete_seasons(d, months)
+    tr = d[d["season_year"].isin(C.TRAIN_YEARS)]
+    te = d[~d["season_year"].isin(C.TRAIN_YEARS)]
+    lab = (lambda y: f"{y}-{str(y + 1)[2:]}") if (12 in months and 1 in months) else str
+    tr_lab = f"{lab(int(tr.season_year.min()))} .. {lab(int(tr.season_year.max()))}"
+    te_lab = f"{lab(int(te.season_year.min()))} .. {lab(int(te.season_year.max()))}"
     rows, choice = [], {}
     for irr in (0, 1):
         best, bk = -9, None
@@ -90,12 +109,12 @@ def frozen_lag(f: pd.DataFrame, w: pd.DataFrame, n_boot: int = 500, months=None)
         choice[irr] = bk
         col = f"SPEI{bk[0]}_lag{bk[1]}"
         per = te[te.irrigated == irr].groupby("site_code").apply(lambda g: g["SVI"].corr(g[col], method="spearman"))
-        rows.append(dict(irrigated=irr, chosen_on="2019-2023", spei_scale=bk[0], lag_days=bk[1],
+        rows.append(dict(irrigated=irr, chosen_on=tr_lab, tested_on=te_lab, spei_scale=bk[0], lag_days=bk[1],
                          rho_train_median=round(best, 3), rho_test_median=round(per.median(), 3),
                          rho_test_min=round(per.min(), 3), rho_test_max=round(per.max(), 3)))
     col0 = f"SPEI{choice[0][0]}_lag{choice[0][1]}"
     col1 = f"SPEI{choice[1][0]}_lag{choice[1][1]}"
-    te = te.assign(block=te["site_code"] + "_" + te["date"].dt.year.astype(str))
+    te = te.assign(block=te["weather"] + "_" + te["season_year"].astype(str))
     blocks = te["block"].unique()
     idx = {b: te.index[te["block"] == b] for b in blocks}
     rng = np.random.default_rng(0)
@@ -107,8 +126,8 @@ def frozen_lag(f: pd.DataFrame, w: pd.DataFrame, n_boot: int = 500, months=None)
         if len(r0) > 30 and len(r1) > 30:
             diffs.append(r0["SVI"].corr(r0[col0], method="spearman") - r1["SVI"].corr(r1[col1], method="spearman"))
     lo, hi = np.percentile(diffs, [2.5, 97.5])
-    note = (f"Rainfed minus irrigated pooled rho on 2024-2026 (frozen choices): 95% CI [{lo:+.2f}, {hi:+.2f}] "
-            f"({n_boot} bootstrap samples of site x year blocks).")
+    note = (f"Rainfed minus irrigated pooled rho on seasons {te_lab} (frozen choices): 95% CI [{lo:+.2f}, "
+            f"{hi:+.2f}] ({n_boot} bootstrap samples of whole-season x weather-cell blocks, {len(blocks)} blocks).")
     return pd.DataFrame(rows), note
 
 
@@ -182,8 +201,9 @@ def seasonal(svci: pd.DataFrame) -> pd.DataFrame:
 def seasonal_rabi(svci: pd.DataFrame) -> pd.DataFrame:
     """Mean Dec-Mar SVI per rabi season (labelled by its start year: 2023 = Dec 2023 - Mar 2024)."""
     s = svci[svci["date"].dt.month.isin(C.RABI_MONTHS)].copy()
-    s["rabi"] = np.where(s["date"].dt.month == 12, s["date"].dt.year, s["date"].dt.year - 1)
-    s["rabi"] = s["rabi"].astype(str) + "-" + (s["rabi"] + 1).astype(str).str[2:]
+    s["season_year"] = season_year(s["date"], C.RABI_MONTHS)
+    s = complete_seasons(s, C.RABI_MONTHS)                     # rabi 2018-19 has no December: dropped
+    s["rabi"] = s["season_year"].astype(str) + "-" + (s["season_year"] + 1).astype(str).str[2:]
     return s.pivot_table(index="site_code", columns="rabi", values="SVI", aggfunc="mean").round(2)
 
 
@@ -213,7 +233,7 @@ def main():
              "### Median over sites (rows: irrigated 0/1, SPEI scale; columns: lag in days)", "",
              to_md(pooled), "",
              "### Strongest link per site", "", to_md(best.round(3), index=False), "",
-             "### Frozen choice: scale and lag chosen on 2019-2023, tested on 2024-2026", "",
+             "### Frozen choice: scale and lag chosen on the 2019-2023 seasons, tested on 2024-2026", "",
              to_md(fl, index=False), "", fl_note, "",
              "## B. Does a weather alarm predict satellite-confirmed stress?", "",
              f"Alarm: SPEI-30 < {C.ALARM_SPEI} after >= {C.ALARM_RESET_DAYS} days above, in Jul-Nov. "
@@ -241,12 +261,16 @@ def main():
     for k, sd in seas.items():
         lines += [f"### Source: {k}", "", to_md(sd), ""]
     lines += ["## D. Rabi season (December - March): the same analyses", "",
-              "Rabi = North-East monsoon / post-kharif season of the AP rabi drought orders. Rainfed fields often "
-              "carry no crop or a short residual-moisture crop then, so their normal greenness is low and "
-              "departures are small.", "",
-              "### Frozen choice (rabi months; chosen on 2019-2023, tested on 2024-2026)", "",
+              "Rabi = North-East monsoon / post-kharif season of the AP rabi drought orders. Whole seasons are kept "
+              "together (Dec y - Mar y+1 = season y); rabi 2018-19 is dropped (data start in January 2019). "
+              "Training seasons 2019-20 .. 2023-24, test seasons 2024-25 and 2025-26. Why the rabi link is weak is "
+              "a hypothesis (fewer cropped rainfed fields after December; December greenness dominated by late "
+              "kharif crops), not a tested result.", "",
+              "### Frozen choice (rabi months, whole seasons)", "",
               to_md(fl_r, index=False), "", fl_r_note, "",
-              "### Weather alarm followed by crop stress (alarms in Dec-Mar)", ""]
+              "### Weather alarm followed by crop stress (alarms in Dec-Mar)", "",
+              f"Alarms are issued in Dec-Mar; the {C.CONFIRM_WINDOW_DAYS}-day follow-up of a February or March "
+              "alarm can extend into April-May, so a confirmation is not restricted to rabi months.", ""]
     for k, c in conf_r.items():
         lines += [f"#### Source: {k}", "", to_md(c.drop(columns=["alarm_dates"]), index=False), ""]
     lines += ["### Mean Dec-Mar SVI of rainfed farmland per rabi season (median of sampled fields)", "",

@@ -1,8 +1,8 @@
 point,site,crop,uav_verdict,flight_date,SVI_kharif_2025_mean,satellite_date,NDVI,NDVI_normal,SVI,SVI_min_30d_before,satellite_verdict
 UAV_Peddakadubur,Ped,Cotton,"mixed (field F1 drought, F3 healthy; 40 of 160 images drought)",2026-01-30,,2026-01-29,0.296,0.257,0.75,-0.24,not stressed
-UAV_Dinnedevarapadu,Din,Cotton,healthy,unknown,0.6,,,,,,
+UAV_Dinnedevarapadu,Din,Cotton,healthy,unknown (window 15 Oct 2025 - 31 Jan 2026),0.6,,,,0.54,-0.41,not stressed (median over the window)
 UAV_Balaji_villas,Bal,Cotton,healthy,2026-01-20,0.44,2026-01-19,0.401,0.349,0.82,-1.29,stressed
-UAV_Shilpa_township,Bal,Cotton,healthy,unknown,1.77,,,,,,
+UAV_Shilpa_township,Bal,Cotton,healthy,unknown (window 15 Oct 2025 - 31 Jan 2026),1.77,,,,0.61,-0.52,not stressed (median over the window)
 UAV_Puddur,Pul,Maize,healthy,2026-01-18,-1.78,2026-01-14,0.546,0.361,1.27,-0.2,not stressed
 UAV_Pullaiah_college,Pul,Cotton,healthy,2026-01-19,1.03,2026-01-19,0.344,0.433,-1.02,-1.76,stressed
 UAV_Cholasamudram,Cho,Maize,drought,2025-11-15,0.78,2025-11-15,0.492,0.487,0.04,0.04,not stressed

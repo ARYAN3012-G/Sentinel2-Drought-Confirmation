@@ -109,6 +109,13 @@ def label_table(df: pd.DataFrame, by: list[str]) -> pd.DataFrame:
     return t.round(1)
 
 
+def frozen_full_px(raw: pd.DataFrame, id_col: str, count_col: str) -> pd.Series:
+    """Per object: pixel count of the clearest image up to REF_CUTOFF (all images if none before it)."""
+    early = raw[raw["date"] <= pd.Timestamp(C.REF_CUTOFF)].groupby(id_col)[count_col].max()
+    full = raw.groupby(id_col)[count_col].max()
+    return raw[id_col].map(early.reindex(full.index).fillna(full))
+
+
 def build_fields() -> tuple[pd.DataFrame, pd.DataFrame]:
     raw = pd.read_csv(C.FIELD_TS_FILE)
     raw = raw.rename(columns=lambda c: c[:-5] if c.endswith("_mean") else c)
@@ -118,8 +125,9 @@ def build_fields() -> tuple[pd.DataFrame, pd.DataFrame]:
     static["weather"] = static["site_code"].map(lambda s: C.SITES[s]["weather"])   # config, not the export
     static["cluster"] = static["site_code"].map(lambda s: C.SITES[s]["cluster"])
     # Script B counts every pixel touching the polygon, script A only pixel centres, so a fully
-    # clear image has ~1.14x 'pixels'. Use each field's clearest image as 100 % instead.
-    raw["full_px"] = raw.groupby("field_id")["NDVI_count"].transform("max")
+    # clear image has ~1.14x 'pixels'. Use each field's clearest image as 100 % instead -
+    # frozen on images up to REF_CUTOFF, so later images never change earlier acceptance decisions.
+    raw["full_px"] = frozen_full_px(raw, "field_id", "NDVI_count")
     obs, qc = clean_observations(raw, "field_id", "NDVI_count", "full_px", C.MIN_CLEAR_FRAC_FIELD, INDICES)
     static = static.merge(frozen_field_flags(obs), on="field_id", how="left")
     dropped = static[~static["crop_ok_ref"]]
