@@ -119,3 +119,57 @@ Compare with official drought declarations (data/official/drought_declarations.c
 | Pul | 0.5700 | 0.9400 | -1.3100 | 1.0300 | -0.2000 | 0.1000 | 1.1900 | -1.5700 |
 | Sira | 0.8900 | 0.6700 | 0.4000 | -0.3000 | -3.1000 | 0.7800 | 0.0500 | -1.5900 |
 | Som |  | 0.6100 | 0.8500 | 0.2200 | -0.9300 | 3.1200 | 1.8900 | -3.9100 |
+
+## D. Rabi season (December - March): the same analyses
+
+Rabi = North-East monsoon / post-kharif season of the AP rabi drought orders. Rainfed fields often carry no crop or a short residual-moisture crop then, so their normal greenness is low and departures are small.
+
+### Frozen choice (rabi months; chosen on 2019-2023, tested on 2024-2026)
+
+| irrigated | chosen_on | spei_scale | lag_days | rho_train_median | rho_test_median | rho_test_min | rho_test_max |
+|---|---|---|---|---|---|---|---|
+| 0 | 2019-2023 | 60 | 5 | 0.3840 | 0.1100 | -0.0150 | 0.3450 |
+| 1 | 2019-2023 | 60 | 10 | 0.1590 | 0.0240 | -0.0840 | 0.1990 |
+
+Rainfed minus irrigated pooled rho on 2024-2026 (frozen choices): 95% CI [+0.05, +0.17] (500 bootstrap samples of site x year blocks).
+
+### Weather alarm followed by crop stress (alarms in Dec-Mar)
+
+#### Source: median of sampled fields
+
+| site | alarms | confirmed | already_stressed_at_alarm | new_onset_confirmed | follow_up_incomplete | confirmation_rate | base_rate_any_date | median_delay_days |
+|---|---|---|---|---|---|---|---|---|
+| Bal | 7 | 1 | 0 | 1/7 | 0 | 0.1430 | 0.0920 | 35.0000 |
+| Cho | 7 | 2 | 1 | 1/6 | 0 | 0.2860 | 0.1570 | 10.0000 |
+| Din | 6 | 2 | 0 | 2/6 | 0 | 0.3330 | 0.1300 | 42.5000 |
+| Lep | 7 | 1 | 1 | 0/6 | 0 | 0.1430 | 0.0970 | 5.0000 |
+| Ped | 3 | 2 | 0 | 2/3 | 0 | 0.6670 | 0.0650 | 57.5000 |
+| Pul | 7 | 1 | 0 | 1/7 | 0 | 0.1430 | 0.0220 | 55.0000 |
+| Sira | 6 | 1 | 0 | 1/6 | 0 | 0.1670 | 0.1460 | 5.0000 |
+| Som | 7 | 1 | 1 | 0/6 | 0 | 0.1430 | 0.1190 | 5.0000 |
+
+#### Source: whole-area farmland
+
+| site | alarms | confirmed | already_stressed_at_alarm | new_onset_confirmed | follow_up_incomplete | confirmation_rate | base_rate_any_date | median_delay_days |
+|---|---|---|---|---|---|---|---|---|
+| Bal | 3 | 0 | 0 | 0/3 | 0 | 0.0000 | 0.1200 |  |
+| Cho | 3 | 1 | 0 | 1/3 | 0 | 0.3330 | 0.0940 | 60.0000 |
+| Din | 2 | 0 | 0 | 0/2 | 0 | 0.0000 | 0.0800 |  |
+| Lep | 2 | 1 | 0 | 1/2 | 0 | 0.5000 | 0.1010 | 55.0000 |
+| Ped | 1 | 0 | 0 | 0/1 | 0 | 0.0000 | 0.0780 |  |
+| Pul | 4 | 1 | 2 | 0/2 | 0 | 0.2500 | 0.3360 | 5.0000 |
+| Sira | 0 | 0 | 0 | 0/0 | 0 |  | 0.1630 |  |
+| Som | 3 | 1 | 0 | 1/3 | 0 | 0.3330 | 0.1190 | 60.0000 |
+
+### Mean Dec-Mar SVI of rainfed farmland per rabi season (median of sampled fields)
+
+| site_code | 2018-19 | 2019-20 | 2020-21 | 2021-22 | 2022-23 | 2023-24 | 2024-25 | 2025-26 |
+|---|---|---|---|---|---|---|---|---|
+| Bal | -1.1500 | 0.0200 | 0.5800 | -0.0400 | -0.1800 | -0.5900 | -0.1900 | 0.1500 |
+| Cho | -1.7700 | -0.3800 | -0.0100 | 0.5900 | 0.1700 | -0.4400 | 0.7000 | -0.2000 |
+| Din | -0.9100 | -0.4400 | 0.2100 | 0.2300 | 0.0400 | -0.6600 | -0.1000 | 0.5300 |
+| Lep | -1.7500 | -0.3100 | 0.2000 | 0.4200 | 0.2100 | -0.4200 | 0.2300 | -0.2600 |
+| Ped | -1.0300 | -0.2800 | 0.1000 | -0.0100 | 0.6600 | -0.4400 | -0.1500 | 0.2700 |
+| Pul | -0.2300 | -0.1800 | -0.2500 | 0.3100 | -0.4300 | -0.3900 | 0.0000 | -0.2100 |
+| Sira | -1.3500 | -0.2900 | -0.0100 | 0.7300 | 0.3900 | -0.3900 | 0.6200 | 0.1000 |
+| Som | -2.6800 | -0.5900 | 0.6400 | 0.6000 | 0.2800 | -0.1500 | 0.5600 | -0.0600 |

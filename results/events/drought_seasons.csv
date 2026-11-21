@@ -1,25 +1,33 @@
-site,year,rain_jun_oct_mm,rain_vs_normal_%,SPEI30_aug_oct,SPEI90_aug_oct,SVI_rainfed_aug_nov,SVI_irrigated_aug_nov,rainfed_fields_below_normal_%,rainfed_fields_severe_%,rainfed_fields_n,mandal,official_declaration
-Bal,2023,570,-6,0.06,0.43,-1.13,-0.03,38,24,21,Kurnool Urban (likely),Severe
-Bal,2025,817,35,0.99,1.22,0.25,0.19,10,0,21,Kurnool Urban (likely),Not declared
-Bal,2026,344,-43,-1.06,-1.33,-1.03,-0.17,33,14,21,Kurnool Urban (likely),Severe
-Cho,2023,350,-31,-1.04,-0.36,-1.46,-0.94,24,24,17,Lepakshi,Moderate
-Cho,2025,568,12,0.5,1.28,0.5,0.29,6,6,17,Lepakshi,Moderate
-Cho,2026,300,-41,-1.38,-1.69,-1.4,-1.78,59,35,17,Lepakshi,Severe
-Din,2023,492,-9,-0.09,0.55,-1.57,-0.13,53,26,19,Kurnool Rural,Not declared
-Din,2025,758,39,1.1,1.46,0.27,0.68,5,0,19,Kurnool Rural,Not declared
-Din,2026,273,-50,-1.27,-1.45,-1.27,-1.37,68,37,19,Kurnool Rural,Severe
-Lep,2023,350,-31,-1.04,-0.36,-1.24,-0.01,28,17,18,Lepakshi,Moderate
-Lep,2025,568,12,0.5,1.28,0.32,-0.33,6,6,18,Lepakshi,Moderate
-Lep,2026,300,-41,-1.38,-1.69,-1.22,-0.64,56,39,18,Lepakshi,Severe
-Ped,2023,495,-10,-0.15,0.57,-0.56,-0.6,40,15,20,Adoni / Peddakadubur border,Moderate (Adoni) / Severe (Peddakadubur)
-Ped,2025,756,37,1.13,1.71,0.09,0.08,5,0,20,Adoni / Peddakadubur border,Not declared
-Ped,2026,239,-57,-1.63,-1.74,-0.31,0.11,25,5,20,Adoni / Peddakadubur border,Severe (Adoni) / Not declared (Peddakadubur)
-Pul,2023,570,-6,0.06,0.43,-0.19,-0.26,30,20,20,Kurnool Urban (likely),Severe
-Pul,2025,817,35,0.99,1.22,0.04,0.64,5,0,20,Kurnool Urban (likely),Not declared
-Pul,2026,344,-43,-1.06,-1.33,-0.65,-0.32,30,10,20,Kurnool Urban (likely),Severe
-Sira,2023,431,-23,-0.89,-0.1,-1.95,-0.93,83,57,23,Sira taluk,Unknown
-Sira,2025,649,15,0.5,1.31,0.12,0.13,0,0,23,Sira taluk,Unknown
-Sira,2026,390,-31,-1.26,-1.52,-1.59,-0.6,70,57,23,Sira taluk,Unknown
-Som,2023,283,-36,-1.02,-0.41,-0.89,-0.3,30,20,20,Somandepalli,Moderate
-Som,2025,486,11,0.47,1.17,0.82,0.82,0,0,20,Somandepalli,Moderate
-Som,2026,209,-52,-1.55,-1.8,-1.77,-0.72,85,65,20,Somandepalli,Severe
+site,season,year,rain_jun_oct_mm,rain_vs_normal_%,SPEI30_aug_oct,SPEI90_aug_oct,SVI_rainfed_aug_nov,SVI_irrigated_aug_nov,rainfed_fields_below_normal_%,rainfed_fields_severe_%,rainfed_fields_n,mandal,official_declaration
+Bal,kharif,2023,570,-6,0.06,0.43,-1.13,-0.03,38,24,21,Kurnool Urban (likely),Severe
+Bal,kharif,2024,810,34,0.61,1.3,0.07,-0.1,14,0,21,Kurnool Urban (likely),Not declared
+Bal,kharif,2025,817,35,0.99,1.22,0.25,0.19,10,0,21,Kurnool Urban (likely),Not declared
+Bal,kharif,2026,344,-43,-1.06,-1.33,-1.03,-0.17,33,14,21,Kurnool Urban (likely),Severe
+Cho,kharif,2023,350,-31,-1.04,-0.36,-1.46,-0.94,24,24,17,Lepakshi,Moderate
+Cho,kharif,2024,832,64,1.03,1.84,0.78,0.38,0,0,17,Lepakshi,Not declared
+Cho,kharif,2025,568,12,0.5,1.28,0.5,0.29,6,6,17,Lepakshi,Moderate
+Cho,kharif,2026,300,-41,-1.38,-1.69,-1.4,-1.78,59,35,17,Lepakshi,Severe
+Din,kharif,2023,492,-9,-0.09,0.55,-1.57,-0.13,53,26,19,Kurnool Rural,Not declared
+Din,kharif,2024,812,49,0.88,1.65,-0.07,-0.44,11,0,19,Kurnool Rural,Not declared
+Din,kharif,2025,758,39,1.1,1.46,0.27,0.68,5,0,19,Kurnool Rural,Not declared
+Din,kharif,2026,273,-50,-1.27,-1.45,-1.27,-1.37,68,37,19,Kurnool Rural,Severe
+Lep,kharif,2023,350,-31,-1.04,-0.36,-1.24,-0.01,28,17,18,Lepakshi,Moderate
+Lep,kharif,2024,832,64,1.03,1.84,0.91,0.71,0,0,18,Lepakshi,Not declared
+Lep,kharif,2025,568,12,0.5,1.28,0.32,-0.33,6,6,18,Lepakshi,Moderate
+Lep,kharif,2026,300,-41,-1.38,-1.69,-1.22,-0.64,56,39,18,Lepakshi,Severe
+Ped,kharif,2023,495,-10,-0.15,0.57,-0.56,-0.6,40,15,20,Adoni / Peddakadubur border,Moderate (Adoni) / Severe (Peddakadubur)
+Ped,kharif,2024,869,58,0.98,1.71,0.22,0.2,5,5,20,Adoni / Peddakadubur border,Not declared (Adoni) / Moderate (Peddakadubur)
+Ped,kharif,2025,756,37,1.13,1.71,0.09,0.08,5,0,20,Adoni / Peddakadubur border,Not declared
+Ped,kharif,2026,239,-57,-1.63,-1.74,-0.31,0.11,25,5,20,Adoni / Peddakadubur border,Severe (Adoni) / Not declared (Peddakadubur)
+Pul,kharif,2023,570,-6,0.06,0.43,-0.19,-0.26,30,20,20,Kurnool Urban (likely),Severe
+Pul,kharif,2024,810,34,0.61,1.3,-0.32,0.19,20,0,20,Kurnool Urban (likely),Not declared
+Pul,kharif,2025,817,35,0.99,1.22,0.04,0.64,5,0,20,Kurnool Urban (likely),Not declared
+Pul,kharif,2026,344,-43,-1.06,-1.33,-0.65,-0.32,30,10,20,Kurnool Urban (likely),Severe
+Sira,kharif,2023,431,-23,-0.89,-0.1,-1.95,-0.93,83,57,23,Sira taluk,Severe
+Sira,kharif,2024,914,62,1.08,1.9,0.54,0.89,0,0,23,Sira taluk,Unknown
+Sira,kharif,2025,649,15,0.5,1.31,0.12,0.13,0,0,23,Sira taluk,Unknown
+Sira,kharif,2026,390,-31,-1.26,-1.52,-1.59,-0.6,70,57,23,Sira taluk,Unknown (likely declared)
+Som,kharif,2023,283,-36,-1.02,-0.41,-0.89,-0.3,30,20,20,Somandepalli,Moderate
+Som,kharif,2024,764,74,1.05,1.76,1.03,0.9,0,0,20,Somandepalli,Not declared
+Som,kharif,2025,486,11,0.47,1.17,0.82,0.82,0,0,20,Somandepalli,Moderate
+Som,kharif,2026,209,-52,-1.55,-1.8,-1.77,-0.72,85,65,20,Somandepalli,Severe
