@@ -230,7 +230,9 @@ def build():
                    "(2025) missed. 2026 is partial (data to 24 Oct).",
                    "<b>Rabi (Dec-Mar):</b> 0 of 4 severe rabi mandal-seasons confirmed on in-season images; the only "
                    "confirmation was carry-over of kharif stress. Claims are therefore kharif-only; rabi continues as a "
-                   "separate project on rabi-crop fields, with rules fixed before rabi 2026-27.",
+                   "separate project on rabi-crop fields, with rules fixed before rabi 2026-27. In that project an "
+                   "XGBoost forecast of rabi greenness 15 days ahead had about 18% lower error than the best simple "
+                   "baseline on three held-out seasons (historical evaluation; Section 11b).",
                    "<b>Honest negatives:</b> weather adds no significant skill to crop forecasts beyond satellite history; "
                    "single-date agreement with UAV verdicts is weak (3 of 10 fields clear, 2 mixed)."]),
            Spacer(1, 8),
@@ -441,6 +443,39 @@ def build():
                    "rain. Field-level rabi activity and the rabi orders disagree on these seasons; rabi 2026-27 is the "
                    "prospective test, with unchanged rules."])
 
+    # ---------------- 11b rabi greenness forecast
+    st += [P("11b. Rabi vegetation forecast (15-day NDVI, XGBoost)", "h2"),
+           P("Because rabi drought declarations are too few to train on, the rabi project instead forecasts crop "
+             "greenness, whose target comes from future satellite images. Rules were fixed in git before training "
+             "(rabi project docs/FORECAST_v1.md, with amendments A1/A1b after two independent reviews; frozen as tag "
+             "rabi-forecast-v1-final). 1,350 stratified random cropland points (100 rainfed and 50 irrigated in each "
+             "of 9 mandals; cropland = WorldCover 2020 and 2021) were followed on every clear Sentinel-2 image, "
+             "October-April 2019-20 to 2025-26. A forecast is issued every 5 days and is used only if the latest "
+             "image is at most 12 days old and a real image exists within 15 +/- 3 days (no interpolation): 233,020 "
+             "of 342,900 potential forecasts (68%); excluded forecasts are missing data, not 'no crop'. Inputs: past "
+             "greenness, the point's training-season normal for issue date + 15 days, and AgERA5 weather available "
+             "8 days late. Trained on 2019-20 to 2021-22, early stopping on 2022-23, refit on 2019-20 to 2022-23, "
+             "tested on 2023-24 to 2025-26.", "intro"),
+           table([["Held-out season", "XGBoost", "Best baseline", "Lower error"],
+                  ["2023-24", "0.046", "0.054 (persistence)", "14%"],
+                  ["2024-25", "0.051", "0.061 (anomaly persistence)", "16%"],
+                  ["2025-26", "0.056", "0.068 (anomaly persistence)", "17%"],
+                  ["All three", "0.051", "0.062 (anomaly persistence)", "18%"]],
+                 [0.22, 0.18, 0.38, 0.22]),
+           P("Table 11. Mean absolute error of NDVI about 15 days ahead (lower is better). Baselines: persistence, "
+             "climatology, anomaly persistence.", "cap")]
+    st += bullets(["XGBoost forecast NDVI approximately 15 days ahead with about 18% lower mean absolute error overall "
+                   "than the best simple baseline. It outperformed all three baselines in each held-out season, with "
+                   "seasonal improvements of 14-17% (December-March only: 17%). 95% interval of the error difference, "
+                   "resampling whole sampled points: -0.012 to -0.010.",
+                   "Adding the tested weather features did not improve overall accuracy (satellite-only XGBoost "
+                   "MAE 0.051).",
+                   "<b>Decline warnings</b> (established crops; decline of at least 0.10 from the latest image to the "
+                   "forecast target, a span of 15-30 days, median 20): 62% precision and 24% recall. The warnings are "
+                   "selective and miss about three-quarters of observed declines; a decline can be drought or harvest.",
+                   "These are historical evaluation results, not a prospective test or validation of drought detection. "
+                   "Whether these forecasts identify independently verified agricultural drought is the open question."])
+
     # ---------------- 12 limitations
     st += [PageBreak(), P("12. Limitations", "h1")]
     st += bullets(["Short satellite record: normals rest on five years; the test years hold one drought season (2026, data to 24 October); 2023 results are retrospective because field selection used 2019-2023 imagery.",
@@ -451,6 +486,7 @@ def build():
                    "AgERA5 is about a week late, so 7-day forecasts give little real warning; 15 days gives about a week.",
                    "No skill beyond persistence at 30 days; UAV comparison uses post-harvest flights and no field boundaries.",
                    "Rabi: no severe rabi case confirmed on in-season images (0/4); the explanation is a hypothesis under a registered test.",
+                   "Rabi greenness forecast: historical evaluation on seasons known during design; it forecasts NDVI, not drought; points are sampled pixels, not verified fields; only five weather cells and three test seasons.",
                    "Mandal boundaries (official 2018 sub-district polygons, results/qc/MANDAL_CHECK.md): all fields of Somandepalle, Cholasamudram and the three Kurnool sites lie in their mandal; 37% of Lepakshi fields lie in Chilamathur and 23% of Sira fields in Agali; 70% of Peddakadubur fields lie in Pedda Kadubur although the centre is in Adoni, so Peddakadubur is scored only when both mandals agree. The 2018 polygons cannot separate Kurnool Urban from Kurnool Rural (split in 2022)."])
 
     # ---------------- 12 references
